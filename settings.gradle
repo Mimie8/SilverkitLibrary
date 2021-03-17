@@ -1,0 +1,3 @@
+include ':silverkit'
+include ':app'
+rootProject.name = "SilverkitLibrary"
