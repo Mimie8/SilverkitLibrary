@@ -1,10 +1,12 @@
-package com.example.silverkit
+package com.example.silverkit.widgets
 
 import android.content.Context
 import android.util.AttributeSet
+import com.example.silverkit.SkOnTouchEvent
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 
-class SkFloatingActionButton : FloatingActionButton{
+
+class SkFloatingActionButton : FloatingActionButton, SkOnTouchEvent {
 
     constructor(context : Context): super(context)
     constructor(context : Context, attributeSet: AttributeSet): super(context, attributeSet)
@@ -13,4 +15,5 @@ class SkFloatingActionButton : FloatingActionButton{
     fun adjustSize(){
         //Adjust floating button size
     }
+
 }
