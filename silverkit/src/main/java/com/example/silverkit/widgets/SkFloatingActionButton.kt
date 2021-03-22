@@ -3,10 +3,11 @@ package com.example.silverkit.widgets
 import android.content.Context
 import android.util.AttributeSet
 import com.example.silverkit.SkOnClick
+import com.example.silverkit.SkOnTouchEvent
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 
-class SkFloatingActionButton : FloatingActionButton, SkOnClick {
+class SkFloatingActionButton : FloatingActionButton, SkOnClick, SkOnTouchEvent {
 
     constructor(context : Context): super(context)
     constructor(context : Context, attributeSet: AttributeSet): super(context, attributeSet)

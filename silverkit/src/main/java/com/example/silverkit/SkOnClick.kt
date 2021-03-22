@@ -14,8 +14,6 @@ interface SkOnClick : View.OnClickListener {
 
         Log.d("info", "SILVERKIT (OnClick): x = $x | y = $y")
 
-        onClick(view)
-
     }
 
 }

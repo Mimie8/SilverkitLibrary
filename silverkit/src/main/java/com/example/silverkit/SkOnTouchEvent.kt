@@ -8,11 +8,15 @@ interface SkOnTouchEvent : View.OnTouchListener {
 
     override fun onTouch(view: View?, event: MotionEvent?): Boolean {
 
-        val x = event?.getX()
-        val y = event?.getY()
-        Log.d("info", "SILVERKIT (Log.d): x = $x | y = $y")
+        val values = IntArray(2)
+        view?.getLocationOnScreen(values)
+        val x = values[0]
+        val y = values[1]
 
-        return onTouch(view, event)
+        Log.d("info", "SILVERKIT (OnTouch): x = $x | y = $y")
+
+        return true
+
     }
 
 }
