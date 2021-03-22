@@ -3,9 +3,9 @@ package com.example.silverkit
 import android.util.Log
 import android.view.View
 
-interface SkOnClick : View.OnClickListener {
+interface SkOnClick {
 
-    override fun onClick(view: View) {
+    fun skOnClick(view: View) {
 
         val values = IntArray(2)
         view.getLocationOnScreen(values)
