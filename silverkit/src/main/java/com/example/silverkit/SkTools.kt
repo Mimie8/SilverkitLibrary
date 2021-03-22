@@ -13,9 +13,7 @@ interface SkTools {
         val x = values[0]
         val y = values[1]
 
-        if (event.getAction() == MotionEvent.ACTION_BUTTON_PRESS){
-            Log.d("info", "SILVERKIT (OnTouch): x = $x | y = $y")
-        }
+        Log.d("info", "SILVERKIT (OnTouch): x = $x | y = $y")
 
     }
 
