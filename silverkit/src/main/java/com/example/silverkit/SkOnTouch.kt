@@ -4,18 +4,16 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 
-interface SkOnTouchEvent : View.OnTouchListener {
+interface SkOnTouch {
 
-    override fun onTouch(view: View?, event: MotionEvent?): Boolean {
+    fun skOnTouch(view: View, event: MotionEvent) {
 
         val values = IntArray(2)
-        view?.getLocationOnScreen(values)
+        view.getLocationOnScreen(values)
         val x = values[0]
         val y = values[1]
 
         Log.d("info", "SILVERKIT (OnTouch): x = $x | y = $y")
-
-        return true
 
     }
 
