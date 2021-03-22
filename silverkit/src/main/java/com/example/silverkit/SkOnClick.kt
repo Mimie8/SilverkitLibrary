@@ -5,14 +5,9 @@ import android.view.View
 
 interface SkOnClick {
 
-    fun skOnClick(view: View) {
+    fun countClick(view: View) {
 
-        val values = IntArray(2)
-        view.getLocationOnScreen(values)
-        val x = values[0]
-        val y = values[1]
-
-        Log.d("info", "SILVERKIT (OnClick): x = $x | y = $y")
+        Log.d("info", "SILVERKIT (counted click)")
 
     }
 
