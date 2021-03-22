@@ -3,6 +3,8 @@ package com.example.silverkit
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
+import com.example.silverkit.widgets.SkFloatingActionButton
+import com.example.silverkit.widgets.SkRecyclerView
 
 interface SkTools {
 
@@ -12,9 +14,20 @@ interface SkTools {
         view.getLocationOnScreen(values)
         val x = values[0]
         val y = values[1]
-        
+
         if(event.getAction() == MotionEvent.ACTION_DOWN){
-            Log.d("info", "SILVERKIT (OnTouch): x = $x | y = $y")
+            //PRESS ON THE VIEW
+            Log.d("info", "SILVERKIT ONTOUCH (SkTools): x = $x | y = $y")
+
+            when (view) {
+                is SkFloatingActionButton -> view.adjustSize()
+                is SkRecyclerView -> view.adjustSize()
+                else -> {
+                    Log.d("info", "SILVERKIT ONTOUCH (SkTools): not a sk view)")
+                }
+            }
+
+
         }
 
     }
