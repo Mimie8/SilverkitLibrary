@@ -13,7 +13,7 @@ interface SkTools {
         val x = values[0]
         val y = values[1]
 
-        Log.d("info", "SILVERKIT (OnTouch): x = $x | y = $y")
+        Log.d("info", "SILVERKIT (OnTouch)" + view.toString() + ": x = $x | y = $y")
 
     }
 
