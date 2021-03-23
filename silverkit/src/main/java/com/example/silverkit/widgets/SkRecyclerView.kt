@@ -19,7 +19,7 @@ class SkRecyclerView : RecyclerView, SkTools {
 
     override fun onTouchEvent(ev: MotionEvent): Boolean {
         toolOnTouch(this, ev)
-        return onTouchEvent(ev)
+        return super.onTouchEvent(ev)
     }
 
 }

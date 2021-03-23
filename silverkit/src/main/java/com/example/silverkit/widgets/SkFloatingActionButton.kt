@@ -19,7 +19,7 @@ class SkFloatingActionButton : FloatingActionButton, SkTools {
 
     override fun onTouchEvent(ev: MotionEvent): Boolean {
         toolOnTouch(this, ev)
-        return onTouchEvent(ev)
+        return super.onTouchEvent(ev)
     }
 
 }

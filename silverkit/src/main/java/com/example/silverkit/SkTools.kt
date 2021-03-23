@@ -15,22 +15,20 @@ interface SkTools {
         val x = values[0]
         val y = values[1]
 
-        /*
         if(event.getAction() == MotionEvent.ACTION_DOWN){
-
-        }
-         */
-
-        //PRESS ON THE VIEW
-        Log.d("info", "SILVERKIT ONTOUCH (SkTools): x = $x | y = $y")
+            //PRESS ON THE VIEW
+            Log.d("info", "SILVERKIT ONTOUCH (SkTools): x = $x | y = $y")
 
 
-        when (view) {
-            is SkFloatingActionButton -> view.adjustSize()
-            is SkRecyclerView -> view.adjustSize()
-            else -> {
-                Log.d("info", "SILVERKIT ONTOUCH (SkTools): not a sk view)")
+            when (view) {
+                is SkFloatingActionButton -> view.adjustSize()
+                is SkRecyclerView -> view.adjustSize()
+                else -> {
+                    Log.d("info", "SILVERKIT ONTOUCH (SkTools): not a sk view)")
+                }
             }
+
+
         }
 
     }
