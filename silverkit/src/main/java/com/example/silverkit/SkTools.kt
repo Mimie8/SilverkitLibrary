@@ -18,10 +18,14 @@ interface SkTools {
         val screenX = event.getX()
         val screenY = event.getY()
 
+        val rawX = event.getRawX()
+        val rawY = event.getRawY()
+
         if(event.getAction() == MotionEvent.ACTION_DOWN){
             //PRESS ON THE VIEW
             Log.d("info", "SILVERKIT TOOL ONTOUCH : x = $x | y = $y")
-            Log.d("info", "SILVERKIT TOOL ONTOUCH : screenX = $screenX | screenY = $screenY")
+            Log.d("info", "SILVERKIT TOOL ONTOUCH : getX = $screenX | getY = $screenY")
+            Log.d("info", "SILVERKIT TOOL ONTOUCH : rawX = $rawX | rawY = $rawY")
 
             /*
             when (view) {
