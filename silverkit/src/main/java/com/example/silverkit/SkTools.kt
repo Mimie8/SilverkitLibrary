@@ -19,6 +19,7 @@ interface SkTools {
             //PRESS ON THE VIEW
             Log.d("info", "SILVERKIT ONTOUCH (SkTools): x = $x | y = $y")
 
+            /*
             when (view) {
                 is SkFloatingActionButton -> view.adjustSize()
                 is SkRecyclerView -> view.adjustSize()
@@ -26,6 +27,7 @@ interface SkTools {
                     Log.d("info", "SILVERKIT ONTOUCH (SkTools): not a sk view)")
                 }
             }
+            */
 
 
         }
