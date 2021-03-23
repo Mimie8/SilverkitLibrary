@@ -1,4 +1,4 @@
-package com.example.silverkit
+package com.amelie.silverkitlibrary
 
 import org.junit.Test
 
