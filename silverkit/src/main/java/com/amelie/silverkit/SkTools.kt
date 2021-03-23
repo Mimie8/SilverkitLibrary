@@ -5,6 +5,9 @@ import android.view.MotionEvent
 import android.view.View
 import com.amelie.silverkit.widgets.SkFloatingActionButton
 import com.amelie.silverkit.widgets.SkRecyclerView
+import java.sql.Timestamp
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 interface SkTools {
 
@@ -17,16 +20,13 @@ interface SkTools {
         val pressure = event.getPressure()
         val rawX = event.getRawX()
         val rawY = event.getRawY()
-        val timestamp = System.currentTimeMillis()/1000
-
+        val timestamp = Timestamp(System.currentTimeMillis())
 
 
         if(event.getAction() == MotionEvent.ACTION_DOWN){
             //PRESS ON THE VIEW
             val viewType = getViewType(view)
-
             Log.d("info", "SILVERKIT TOOL ONTOUCH : VIEW = $viewType | X = $rawX | Y = $rawY | PRESSURE = $pressure | TIMESTAMP : $timestamp")
-
         }
 
     }
