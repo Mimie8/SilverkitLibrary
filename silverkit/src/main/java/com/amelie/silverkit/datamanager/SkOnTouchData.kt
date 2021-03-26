@@ -13,7 +13,7 @@ class SkOnTouchData {
     var timestamp : Timestamp? = null
 
     constructor()
-    constructor(viewType: SkTools.ViewType, viewLocal: String, pressure: Float, rawX: Float, raxY: Float, timestamp: Timestamp){
+    constructor(viewType: SkTools.ViewType, viewLocal: String, pressure: Float, rawX: Float, rawY: Float, timestamp: Timestamp){
         this.viewType = viewType
         this.viewLocal = viewLocal
         this.pressure = pressure

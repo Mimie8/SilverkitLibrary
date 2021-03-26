@@ -61,19 +61,19 @@ interface SkTools {
 
         var fileWriter: FileWriter? = null
 
-        val path = view.context.filesDir.canonicalFile
-        val file = File("$path/FileOnTouchData.csv")
-        Log.d("info", "SILVERKIT TOOL ONTOUCH : $path/FileOnTouchData.csv)")
-
         try {
 
-            fileWriter = FileWriter(file)
+            val path = view.context.filesDir.canonicalFile
+            val file = File("$path/FileOnTouchData.csv")
+            fileWriter = FileWriter(file, true)
 
-            if (file.length() == 0L){
+            //If the file doesn't exist set the column
+            if(!file.exists()){
                 fileWriter.append(CSV_HEADER)
                 fileWriter.append('\n')
             }
 
+            //Save the on touch event infos
             fileWriter.append(touchData.viewType.toString())
             fileWriter.append(',')
             fileWriter.append(touchData.viewLocal.toString())
@@ -87,7 +87,7 @@ interface SkTools {
             fileWriter.append(touchData.timestamp.toString())
             fileWriter.append('\n')
 
-            Log.d("info", "SILVERKIT TOOL ONTOUCH : Write CSV successfully!)")
+            Log.d("info", "SILVERKIT TOOL ONTOUCH : Write CSV successfully in \n$path/FileOnTouchData.csv)")
 
         } catch (e: Exception) {
             Log.d("info", "SILVERKIT TOOL ONTOUCH : Writing CSV error!)")
