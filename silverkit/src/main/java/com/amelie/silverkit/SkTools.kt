@@ -9,8 +9,6 @@ import com.amelie.silverkit.widgets.SkRecyclerView
 import java.io.File
 import java.io.FileWriter
 import java.io.IOException
-import java.nio.file.Files
-import java.nio.file.Paths
 import java.sql.Timestamp
 
 private val CSV_HEADER = "view type, view activity, pressure, x, y, timestamp"
@@ -37,7 +35,7 @@ interface SkTools {
 
             Log.d("info", "SILVERKIT TOOL ONTOUCH : VIEW = $viewType | X = $rawX | Y = $rawY | PRESSURE = $pressure | TIMESTAMP : $timestamp")
 
-            saveOnTouchData(touchData)
+            saveOnTouchData(view, touchData)
         }
 
     }
@@ -59,23 +57,21 @@ interface SkTools {
         return view.context.toString()
     }
 
-    private fun saveOnTouchData(touchData: SkOnTouchData){
+    private fun saveOnTouchData(view: View, touchData: SkOnTouchData){
 
         var fileWriter: FileWriter? = null
+
+        val path = view.context.filesDir.absolutePath
+        val file = File("$path/FileOnTouchData.csv")
+
         try {
 
-            var file : File? = null
-            if (!File("FileOnTouchData.csv").exists()){
-                file = File ("FileOnTouchData.csv")
-            }
+            fileWriter = FileWriter(file)
 
-            fileWriter = FileWriter("FileOnTouchData.csv")
-
-            if (file == null){
+            if (file.length() == 0L){
                 fileWriter.append(CSV_HEADER)
                 fileWriter.append('\n')
             }
-
 
             fileWriter.append(touchData.viewType.toString())
             fileWriter.append(',')
