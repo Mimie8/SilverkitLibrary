@@ -61,7 +61,7 @@ interface SkTools {
 
         var fileWriter: FileWriter? = null
 
-        val path = view.context.filesDir.absolutePath
+        val path = view.context.filesDir.canonicalFile
         val file = File("$path/FileOnTouchData.csv")
 
         try {
