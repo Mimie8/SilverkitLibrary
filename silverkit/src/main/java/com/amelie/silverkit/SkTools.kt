@@ -63,9 +63,9 @@ interface SkTools {
 
         try {
 
-            //val path = view.context.filesDir.canonicalFile
-            //val file = File("$path/FileOnTouchData.csv")
-            val file = File("FileOnTouchData.csv")
+            val path = view.context.filesDir.canonicalFile
+            val file = File("$path/FileOnTouchData.csv")
+
             fileWriter = FileWriter(file, true)
 
             //If the file doesn't exist set the column
@@ -88,7 +88,7 @@ interface SkTools {
             fileWriter.append(touchData.timestamp.toString())
             fileWriter.append('\n')
 
-            Log.d("info", "SILVERKIT TOOL ONTOUCH : Write CSV successfully!)")
+            Log.d("info", "SILVERKIT TOOL ONTOUCH : Write CSV successfully in \n$path/FileOnTouchData.csv)")
 
         } catch (e: Exception) {
             Log.d("info", "SILVERKIT TOOL ONTOUCH : Writing CSV error!)")
