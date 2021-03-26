@@ -63,11 +63,10 @@ interface SkTools {
 
         try {
 
-            //if I can get the context of the library : val path = view.context.filesDir.canonicalFile
-            val path = "/data/data/com.amelie.silverkitlibrary/files/FileOnTouchData.csv"
-            val file = File(path)
+            //val path = view.context.filesDir.canonicalFile
+            //val file = File("$path/FileOnTouchData.csv")
+            val file = File("FileOnTouchData.csv")
             fileWriter = FileWriter(file, true)
-
 
             //If the file doesn't exist set the column
             if(!file.exists()){
@@ -75,7 +74,6 @@ interface SkTools {
                 fileWriter.append('\n')
             }
 
-            
             //Save the on touch event info
             fileWriter.append(touchData.viewType.toString())
             fileWriter.append(',')
@@ -90,7 +88,7 @@ interface SkTools {
             fileWriter.append(touchData.timestamp.toString())
             fileWriter.append('\n')
 
-            Log.d("info", "SILVERKIT TOOL ONTOUCH : Write CSV successfully in $path")
+            Log.d("info", "SILVERKIT TOOL ONTOUCH : Write CSV successfully!)")
 
         } catch (e: Exception) {
             Log.d("info", "SILVERKIT TOOL ONTOUCH : Writing CSV error!)")
