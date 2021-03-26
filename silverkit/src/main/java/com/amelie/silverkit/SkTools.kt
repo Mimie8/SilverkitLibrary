@@ -6,11 +6,14 @@ import android.view.View
 import com.amelie.silverkit.datamanager.SkOnTouchData
 import com.amelie.silverkit.widgets.SkFloatingActionButton
 import com.amelie.silverkit.widgets.SkRecyclerView
+import java.io.File
 import java.io.FileWriter
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.sql.Timestamp
+
+private val CSV_HEADER = "view type, view activity, pressure, x, y, timestamp"
 
 interface SkTools {
 
@@ -60,12 +63,19 @@ interface SkTools {
 
         var fileWriter: FileWriter? = null
         try {
+
+            var file : File? = null
+            if (!File("FileOnTouchData.csv").exists()){
+                file = File ("FileOnTouchData.csv")
+            }
+
             fileWriter = FileWriter("FileOnTouchData.csv")
 
-            /*
-            fileWriter.append(CSV_HEADER)
-            fileWriter.append('\n')
-             */
+            if (file == null){
+                fileWriter.append(CSV_HEADER)
+                fileWriter.append('\n')
+            }
+
 
             fileWriter.append(touchData.viewType.toString())
             fileWriter.append(',')
@@ -80,7 +90,6 @@ interface SkTools {
             fileWriter.append(touchData.timestamp.toString())
             fileWriter.append('\n')
 
-            println("Write CSV successfully!")
             Log.d("info", "SILVERKIT TOOL ONTOUCH : Write CSV successfully!)")
 
         } catch (e: Exception) {
