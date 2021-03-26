@@ -63,6 +63,7 @@ interface SkTools {
 
         val path = view.context.filesDir.canonicalFile
         val file = File("$path/FileOnTouchData.csv")
+        Log.d("info", "SILVERKIT TOOL ONTOUCH : $path/FileOnTouchData.csv)")
 
         try {
 
