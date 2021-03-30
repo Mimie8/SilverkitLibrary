@@ -17,7 +17,7 @@ class SkRecyclerView : RecyclerView, SkTools {
         Log.d("info", "SILVERKIT RECYCLERVIEW : adjusted size")
     }
 
-    fun getType(): SkTools.ViewType {
+    override fun getType(): SkTools.ViewType {
         return SkTools.ViewType.RECYCLERVIEW
     }
 

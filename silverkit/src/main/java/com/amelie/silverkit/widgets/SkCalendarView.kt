@@ -17,7 +17,7 @@ class SkCalendarView : CalendarView, SkTools {
         Log.d("info", "SILVERKIT CalendarView : adjusted size")
     }
 
-    fun getType(): SkTools.ViewType {
+    override fun getType(): SkTools.ViewType {
         return SkTools.ViewType.CALENDARVIEW
     }
 

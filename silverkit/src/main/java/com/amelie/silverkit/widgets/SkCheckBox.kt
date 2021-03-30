@@ -19,7 +19,7 @@ class SkCheckBox : CheckBox, SkTools {
         Log.d("info", "SILVERKIT CheckBox : adjusted size")
     }
 
-    fun getType(): SkTools.ViewType {
+    override fun getType(): SkTools.ViewType {
         return SkTools.ViewType.CHECKBOX
     }
 

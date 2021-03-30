@@ -17,7 +17,7 @@ class SkChronometer : Chronometer, SkTools {
         Log.d("info", "SILVERKIT Chronometer : adjusted size")
     }
 
-    fun getType(): SkTools.ViewType {
+    override fun getType(): SkTools.ViewType {
         return SkTools.ViewType.CHRONOMETER
     }
 

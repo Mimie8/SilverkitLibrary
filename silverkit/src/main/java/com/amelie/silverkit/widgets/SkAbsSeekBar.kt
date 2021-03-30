@@ -17,7 +17,7 @@ class SkAbsSeekBar : AbsSeekBar, SkTools {
         Log.d("info", "SILVERKIT AbsSeekBar : adjusted size")
     }
 
-    fun getType(): SkTools.ViewType {
+    override fun getType(): SkTools.ViewType {
         return SkTools.ViewType.ABSSEEKBAR
     }
 

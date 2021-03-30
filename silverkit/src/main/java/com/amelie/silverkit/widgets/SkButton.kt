@@ -19,7 +19,7 @@ class SkButton : Button, SkTools {
         Log.d("info", "SILVERKIT Button : adjusted size")
     }
 
-    fun getType(): SkTools.ViewType {
+    override fun getType(): SkTools.ViewType {
         return SkTools.ViewType.BUTTON
     }
 

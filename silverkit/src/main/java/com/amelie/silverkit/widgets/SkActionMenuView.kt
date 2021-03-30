@@ -19,7 +19,7 @@ class SkActionMenuView : ActionMenuView, SkTools {
         Log.d("info", "SILVERKIT ActionMenuView : adjusted size")
     }
 
-    fun getType(): SkTools.ViewType {
+    override fun getType(): SkTools.ViewType {
         return SkTools.ViewType.ACTIONMENUVIEW
     }
 

@@ -17,7 +17,7 @@ class SkAbsSpinner : AbsSpinner, SkTools {
         Log.d("info", "SILVERKIT AbsSpinner : adjusted size")
     }
 
-    fun getType(): SkTools.ViewType {
+    override fun getType(): SkTools.ViewType {
         return SkTools.ViewType.ABSSPINNER
     }
 

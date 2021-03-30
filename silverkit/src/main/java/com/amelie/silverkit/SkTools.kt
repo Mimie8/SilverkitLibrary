@@ -43,7 +43,7 @@ interface SkTools {
     }
 
     private fun getViewType(view: View) : ViewType{
-        
+
         if(view is SkTools){
             return view.getType()
         } else {

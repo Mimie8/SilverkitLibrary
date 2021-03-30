@@ -17,7 +17,7 @@ class SkCompoundButton : CompoundButton, SkTools {
         Log.d("info", "SILVERKIT CompoundButton : adjusted size")
     }
 
-    fun getType(): SkTools.ViewType {
+    override fun getType(): SkTools.ViewType {
         return SkTools.ViewType.COMPOUNDBUTTON
     }
 
