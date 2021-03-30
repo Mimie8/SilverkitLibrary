@@ -4,21 +4,21 @@ import android.content.Context
 import android.util.AttributeSet
 import android.util.Log
 import android.view.MotionEvent
+import android.widget.AbsSpinner
 import com.amelie.silverkit.SkTools
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 
-class SkFloatingActionButton : FloatingActionButton, SkTools {
+class SkAbsSpinner : AbsSpinner, SkTools {
 
     constructor(context : Context): super(context)
     constructor(context : Context, attributeSet: AttributeSet): super(context, attributeSet)
     constructor(context : Context, attributeSet: AttributeSet, defStyleAttr: Int): super(context, attributeSet, defStyleAttr)
 
     fun adjustSize(){
-        Log.d("info", "SILVERKIT FAB : adjusted size")
+        Log.d("info", "SILVERKIT AbsSpinner : adjusted size")
     }
 
-    override fun getType(): SkTools.ViewType {
-        return SkTools.ViewType.FAB
+    fun getType(): SkTools.ViewType {
+        return SkTools.ViewType.ABSSPINNER
     }
 
     override fun onTouchEvent(ev: MotionEvent): Boolean {

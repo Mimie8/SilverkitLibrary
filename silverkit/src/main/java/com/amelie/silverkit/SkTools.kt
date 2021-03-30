@@ -3,7 +3,9 @@ package com.amelie.silverkit
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
+import android.widget.AbsSeekBar
 import com.amelie.silverkit.datamanager.SkOnTouchData
+import com.amelie.silverkit.widgets.SkAbsSeekBar
 import com.amelie.silverkit.widgets.SkFloatingActionButton
 import com.amelie.silverkit.widgets.SkRecyclerView
 import java.io.File
@@ -16,7 +18,7 @@ private val CSV_HEADER = "view type, view activity, pressure, x, y, timestamp"
 interface SkTools {
 
     enum class ViewType {
-        NONE, FAB, RV
+        NONE, FAB, RECYCLERVIEW, ABSSEEKBAR, ABSSPINNER, ACTIONMENUVIEW, AUTOCOMPLETETEXTVIEW, BUTTON, CALENDARVIEW, CHECKBOX, CHECKEDTEXTVIEW, CHRONOMETER, COMPOUNDBUTTON
     }
 
     fun toolOnTouch(view: View, event: MotionEvent) {
@@ -41,17 +43,17 @@ interface SkTools {
     }
 
     private fun getViewType(view: View) : ViewType{
-
-        when (view) {
-            is SkFloatingActionButton -> return ViewType.FAB
-            is SkRecyclerView -> return ViewType.RV
-            else -> {
-                Log.d("info", "SILVERKIT TOOL ONTOUCH : not a sk view)")
-                return ViewType.NONE
-            }
+        
+        if(view is SkTools){
+            return view.getType()
+        } else {
+            Log.d("info", "SILVERKIT TOOL ONTOUCH : not a sk view)")
+            return ViewType.NONE
         }
 
     }
+
+    fun getType() : ViewType
 
     private fun getViewLocal(view: View) : String {
         return view.context.toString()

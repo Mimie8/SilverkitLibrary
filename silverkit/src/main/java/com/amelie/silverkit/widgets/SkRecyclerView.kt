@@ -17,6 +17,10 @@ class SkRecyclerView : RecyclerView, SkTools {
         Log.d("info", "SILVERKIT RECYCLERVIEW : adjusted size")
     }
 
+    fun getType(): SkTools.ViewType {
+        return SkTools.ViewType.RECYCLERVIEW
+    }
+
     override fun onTouchEvent(ev: MotionEvent): Boolean {
         toolOnTouch(this, ev)
         return super.onTouchEvent(ev)
