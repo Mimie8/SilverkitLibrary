@@ -8,13 +8,10 @@ import androidx.annotation.RequiresApi
 import com.amelie.silverkit.datamanager.SkOnTouchData
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
-import java.io.BufferedWriter
 import java.io.File
 import java.io.FileWriter
 import java.io.IOException
-import java.nio.file.FileSystems
 import java.nio.file.Files
-import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 import java.sql.Timestamp
 
@@ -123,12 +120,13 @@ interface SkTools {
     private fun saveData(view: View, touchData: SkOnTouchData){
 
         val path = view.context.getExternalFilesDir(null)?.absolutePath
-        val file = File("$path/FileOnTouchData.csv")
+        val file = "$path/FileOnTouchData.csv"
 
         try {
 
-            val fileWriter = Files.newBufferedWriter(Paths.get("FileOnTouchData.csv", path), StandardOpenOption.APPEND, StandardOpenOption.CREATE)
-            val csvPrinter = CSVPrinter(fileWriter, CSVFormat.DEFAULT.withHeader("VIEW_TYPE", "VIEW_ACTIVITY", "PRESSURE", "X", "Y", "TIMESTAMP"))
+            //val fileWriter = Files.newBufferedWriter(file, StandardOpenOption.APPEND, StandardOpenOption.CREATE)
+            val writer = FileWriter(file, true)
+            val csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT.withHeader("VIEW_TYPE", "VIEW_ACTIVITY", "PRESSURE", "X", "Y", "TIMESTAMP"))
 
             csvPrinter.printRecord(touchData.viewType, touchData.viewLocal, touchData.pressure, touchData.rawX, touchData.rawY, touchData.timestamp)
 
