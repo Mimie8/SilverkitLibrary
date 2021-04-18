@@ -1,5 +1,6 @@
 package com.amelie.silverkit
 
+import android.os.Environment
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
@@ -72,7 +73,8 @@ interface SkTools {
 
         try {
 
-            val path = view.context.filesDir.canonicalFile
+            //val path = view.context.filesDir.canonicalFile
+            val path = view.context.getExternalFilesDir(null)?.absolutePath
             val file = File("$path/FileOnTouchData.csv")
 
             fileWriter = FileWriter(file, true)
