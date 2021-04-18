@@ -1,18 +1,21 @@
 package com.amelie.silverkit
 
+import android.os.Build
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
+import androidx.annotation.RequiresApi
 import com.amelie.silverkit.datamanager.SkOnTouchData
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
+import java.io.BufferedWriter
 import java.io.File
 import java.io.FileWriter
 import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.nio.file.StandardOpenOption
 import java.sql.Timestamp
-
-private var fileWriter: FileWriter? = null
-private var csvPrinter: CSVPrinter? = null
 
 interface SkTools {
 
@@ -115,21 +118,21 @@ interface SkTools {
 
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun saveData(view: View, touchData: SkOnTouchData){
 
         val path = view.context.getExternalFilesDir(null)?.absolutePath
-        val file = File("$path/FileOnTouchData.csv")
+        val uri = "$path/FileOnTouchData.csv"
+
+        var fileWriter: BufferedWriter? = null
+        var csvPrinter: CSVPrinter? = null
 
         try {
 
-            fileWriter = FileWriter(file, true)
+            fileWriter = Files.newBufferedWriter(Paths.get(uri), StandardOpenOption.APPEND, StandardOpenOption.CREATE)
+            csvPrinter = CSVPrinter(fileWriter, CSVFormat.DEFAULT.withHeader("VIEW_TYPE", "VIEW_ACTIVITY", "PRESSURE", "X", "Y", "TIMESTAMP"))
 
-            //If the file doesn't exist set the column
-            if(!file.exists()){
-                csvPrinter = CSVPrinter(fileWriter, CSVFormat.DEFAULT.withHeader("VIEW_TYPE", "VIEW_ACTIVITY", "PRESSURE", "X", "Y", "TIMESTAMP"))
-            }
-
-            csvPrinter?.printRecord(touchData.viewType, touchData.viewLocal, touchData.pressure, touchData.rawX, touchData.rawY, touchData.timestamp)
+            csvPrinter.printRecord(touchData.viewType, touchData.viewLocal, touchData.pressure, touchData.rawX, touchData.rawY, touchData.timestamp)
 
             println("Write CSV successfully!")
 
@@ -142,7 +145,7 @@ interface SkTools {
 
             try {
                 fileWriter!!.flush()
-                fileWriter!!.close()
+                fileWriter.close()
                 csvPrinter!!.close()
             } catch (e: IOException) {
                 println("Flushing/closing error!")
