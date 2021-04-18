@@ -132,7 +132,8 @@ interface SkTools {
         var csvPrinter: CSVPrinter? = null
 
         try {
-            fileWriter = FileWriter(file)
+            fileWriter = FileWriter(file, true)
+
             csvPrinter = CSVPrinter(fileWriter, CSVFormat.DEFAULT.withHeader("VIEW_TYPE", "VIEW_ACTIVITY", "PRESSURE", "X", "Y", "TIMESTAMP"))
 
             csvPrinter.printRecord(touchData.viewType, touchData.viewLocal, touchData.pressure, touchData.rawX, touchData.rawY, touchData.timestamp)
