@@ -12,6 +12,7 @@ import java.io.BufferedWriter
 import java.io.File
 import java.io.FileWriter
 import java.io.IOException
+import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
@@ -121,16 +122,14 @@ interface SkTools {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun saveData(view: View, touchData: SkOnTouchData){
 
-        val path = view.context.getExternalFilesDir(null)?.absolutePath
-        val uri = "$path/FileOnTouchData.csv"
-
-        var fileWriter: BufferedWriter? = null
-        var csvPrinter: CSVPrinter? = null
+        val path = view.context.getExternalFilesDir(null).absolutePath
+        val str = "$path/FileOnTouchData.csv"
 
         try {
 
-            fileWriter = Files.newBufferedWriter(Paths.get(uri), StandardOpenOption.APPEND, StandardOpenOption.CREATE)
-            csvPrinter = CSVPrinter(fileWriter, CSVFormat.DEFAULT.withHeader("VIEW_TYPE", "VIEW_ACTIVITY", "PRESSURE", "X", "Y", "TIMESTAMP"))
+            val fullPath = FileSystems.getDefault().getPath(str);
+            val fileWriter = Files.newBufferedWriter(fullPath, StandardOpenOption.APPEND, StandardOpenOption.CREATE)
+            val csvPrinter = CSVPrinter(fileWriter, CSVFormat.DEFAULT.withHeader("VIEW_TYPE", "VIEW_ACTIVITY", "PRESSURE", "X", "Y", "TIMESTAMP"))
 
             csvPrinter.printRecord(touchData.viewType, touchData.viewLocal, touchData.pressure, touchData.rawX, touchData.rawY, touchData.timestamp)
 
