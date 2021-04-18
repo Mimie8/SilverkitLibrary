@@ -120,13 +120,20 @@ interface SkTools {
     private fun saveData(view: View, touchData: SkOnTouchData){
 
         val path = view.context.getExternalFilesDir(null)?.absolutePath
-        val file = "$path/FileOnTouchData.csv"
+        val str = "$path/FileOnTouchData.csv"
+        val file = File(str)
 
         try {
+            
+            val writer = FileWriter(str, true)
 
-            //val fileWriter = Files.newBufferedWriter(file, StandardOpenOption.APPEND, StandardOpenOption.CREATE)
-            val writer = FileWriter(file, true)
-            val csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT.withHeader("VIEW_TYPE", "VIEW_ACTIVITY", "PRESSURE", "X", "Y", "TIMESTAMP"))
+            var csvPrinter:CSVPrinter? = null
+
+            if (!file.exists()){
+                csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT.withHeader("VIEW_TYPE", "VIEW_ACTIVITY", "PRESSURE", "X", "Y", "TIMESTAMP"))
+            } else {
+                csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT)
+            }
 
             csvPrinter.printRecord(touchData.viewType, touchData.viewLocal, touchData.pressure, touchData.rawX, touchData.rawY, touchData.timestamp)
 
