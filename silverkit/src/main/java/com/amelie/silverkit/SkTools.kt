@@ -124,12 +124,13 @@ interface SkTools {
         val file = File(str)
 
         try {
-            
+
             val writer = FileWriter(str, true)
 
             var csvPrinter:CSVPrinter? = null
 
-            if (!file.exists()){
+            //If file is empty, add header
+            if(file.length().toFloat() == 0f){
                 csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT.withHeader("VIEW_TYPE", "VIEW_ACTIVITY", "PRESSURE", "X", "Y", "TIMESTAMP"))
             } else {
                 csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT)
