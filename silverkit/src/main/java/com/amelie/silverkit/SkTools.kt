@@ -122,7 +122,7 @@ interface SkTools {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun saveData(view: View, touchData: SkOnTouchData){
 
-        val path = view.context.getExternalFilesDir(null).absolutePath
+        val path = view.context.getExternalFilesDir(null)?.absolutePath
         val str = "$path/FileOnTouchData.csv"
 
         try {
