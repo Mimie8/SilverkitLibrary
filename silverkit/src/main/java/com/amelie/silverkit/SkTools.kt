@@ -134,6 +134,9 @@ interface SkTools {
 
             csvPrinter.printRecord(touchData.viewType, touchData.viewLocal, touchData.pressure, touchData.rawX, touchData.rawY, touchData.timestamp)
 
+            csvPrinter.flush()
+            csvPrinter.close()
+
             println("Write CSV successfully!")
 
         } catch (e: Exception) {
@@ -141,7 +144,11 @@ interface SkTools {
             println("Writing CSV error!")
             e.printStackTrace()
 
-        } finally {
+        }
+
+        /*
+
+        finally {
 
             try {
                 fileWriter!!.flush()
@@ -153,6 +160,8 @@ interface SkTools {
             }
 
         }
+        */
+
 
     }
 
