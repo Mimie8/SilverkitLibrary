@@ -1,26 +1,18 @@
 package com.amelie.silverkit
 
-import android.net.Uri
-import android.os.Environment
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
-import android.widget.AbsSeekBar
 import com.amelie.silverkit.datamanager.SkOnTouchData
-import com.amelie.silverkit.widgets.SkAbsSeekBar
-import com.amelie.silverkit.widgets.SkFloatingActionButton
-import com.amelie.silverkit.widgets.SkRecyclerView
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
 import java.io.File
 import java.io.FileWriter
 import java.io.IOException
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
 import java.sql.Timestamp
 
-private val CSV_HEADER = "view type, view activity, pressure, x, y, timestamp"
+private var fileWriter: FileWriter? = null
+private var csvPrinter: CSVPrinter? = null
 
 interface SkTools {
 
@@ -88,7 +80,7 @@ interface SkTools {
 
             //If the file doesn't exist set the column
             if(!file.exists()){
-                fileWriter.append(CSV_HEADER)
+                //fileWriter.append(CSV_HEADER)
                 fileWriter.append('\n')
             }
 
@@ -128,15 +120,16 @@ interface SkTools {
         val path = view.context.getExternalFilesDir(null)?.absolutePath
         val file = File("$path/FileOnTouchData.csv")
 
-        var fileWriter: FileWriter? = null
-        var csvPrinter: CSVPrinter? = null
-
         try {
+
             fileWriter = FileWriter(file, true)
 
-            csvPrinter = CSVPrinter(fileWriter, CSVFormat.DEFAULT.withHeader("VIEW_TYPE", "VIEW_ACTIVITY", "PRESSURE", "X", "Y", "TIMESTAMP"))
+            //If the file doesn't exist set the column
+            if(!file.exists()){
+                csvPrinter = CSVPrinter(fileWriter, CSVFormat.DEFAULT.withHeader("VIEW_TYPE", "VIEW_ACTIVITY", "PRESSURE", "X", "Y", "TIMESTAMP"))
+            }
 
-            csvPrinter.printRecord(touchData.viewType, touchData.viewLocal, touchData.pressure, touchData.rawX, touchData.rawY, touchData.timestamp)
+            csvPrinter?.printRecord(touchData.viewType, touchData.viewLocal, touchData.pressure, touchData.rawX, touchData.rawY, touchData.timestamp)
 
             println("Write CSV successfully!")
 
@@ -149,7 +142,7 @@ interface SkTools {
 
             try {
                 fileWriter!!.flush()
-                fileWriter.close()
+                fileWriter!!.close()
                 csvPrinter!!.close()
             } catch (e: IOException) {
                 println("Flushing/closing error!")
