@@ -36,8 +36,8 @@ interface SkTools {
             val viewType = getViewType(view)
             val viewLocal = getViewLocal(view)
             val pressure = event.getPressure()
-            val rawX = event.getRawX()
-            val rawY = event.getRawY()
+            val rawX = event.getRawX().toInt()
+            val rawY = event.getRawY().toInt()
             val timestamp = Timestamp(System.currentTimeMillis())
 
             val touchData = SkOnTouchData(viewType, viewLocal, pressure, rawX, rawY, timestamp)
@@ -64,7 +64,7 @@ interface SkTools {
     fun getType() : ViewType
 
     private fun getViewLocal(view: View) : String {
-        return view.context.toString()
+        return view.context.javaClass.simpleName
     }
 
     private fun saveOnTouchData(view: View, touchData: SkOnTouchData){
@@ -149,22 +149,6 @@ interface SkTools {
             e.printStackTrace()
 
         }
-
-        /*
-
-        finally {
-
-            try {
-                fileWriter!!.flush()
-                fileWriter.close()
-                csvPrinter!!.close()
-            } catch (e: IOException) {
-                println("Flushing/closing error!")
-                e.printStackTrace()
-            }
-
-        }
-        */
 
 
     }
