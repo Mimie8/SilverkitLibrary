@@ -5,6 +5,7 @@ import java.sql.Timestamp
 
 class SkOnTouchData {
 
+    var viewID : String? = null
     var viewType : SkTools.ViewType? = null
     var viewLocal : String? = null
     var rawX: Int = 0
@@ -12,7 +13,8 @@ class SkOnTouchData {
     var timestamp : Timestamp? = null
 
     constructor()
-    constructor(viewType: SkTools.ViewType, viewLocal: String, rawX: Int, rawY: Int, timestamp: Timestamp){
+    constructor(viewID: String, viewType: SkTools.ViewType, viewLocal: String, rawX: Int, rawY: Int, timestamp: Timestamp){
+        this.viewID = viewID
         this.viewType = viewType
         this.viewLocal = viewLocal
         this.rawX = rawX
@@ -21,7 +23,7 @@ class SkOnTouchData {
     }
 
     override fun toString(): String {
-        return "SkOnTouchData(viewType=$viewType, viewLocal=$viewLocal, rawX=$rawX, rawY=$rawY, timestamp=$timestamp)"
+        return "SkOnTouchData(viewID=$viewID, viewType=$viewType, viewLocal=$viewLocal, rawX=$rawX, rawY=$rawY, timestamp=$timestamp)"
     }
 
 }

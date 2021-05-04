@@ -33,17 +33,54 @@ interface SkTools {
         if(event.getAction() == MotionEvent.ACTION_DOWN){
             //PRESS ON THE VIEW
 
+            val viewID = getViewID(view)
             val viewType = getViewType(view)
             val viewLocal = getViewLocal(view)
             val rawX = event.getRawX().toInt()
             val rawY = event.getRawY().toInt()
             val timestamp = Timestamp(System.currentTimeMillis())
 
-            val touchData = SkOnTouchData(viewType, viewLocal, rawX, rawY, timestamp)
+            val touchData = SkOnTouchData(viewID, viewType, viewLocal, rawX, rawY, timestamp)
 
-            Log.d("info", "SILVERKIT TOOL ONTOUCH : VIEW = $viewType | X = $rawX | Y = $rawY | TIMESTAMP : $timestamp")
+            Log.d("info", "SILVERKIT TOOL ONTOUCH : ID = $viewID | VIEW = $viewType | X = $rawX | Y = $rawY | TIMESTAMP : $timestamp")
 
             saveData(view, touchData)
+        }
+
+    }
+
+    private fun getViewID(view: View): String {
+
+        // view doesn't have an id
+        if (view.getId() === View.NO_ID) {
+
+            // generate an id
+            var id: Int = (0..1000).random()
+            var name: String = view.context.resources.getResourceEntryName(id)
+
+            //if the id is already used, generate a new one
+            while(checkIDexist(name, view.context.getPackageName())){
+                // try to generate a new id
+                id = (0..1000).random()
+                name = view.context.resources.getResourceEntryName(id)
+            }
+
+            //assign the id
+            view.setId(id)
+
+        }
+
+        return view.context.resources.getResourceEntryName(view.id)
+
+    }
+
+    private fun checkIDexist(name: String, packageName: String): Boolean{
+
+        if (name == null || !name.startsWith(packageName)) {
+            // id is not an id used by a layout element.
+            return false
+        } else {
+            return true
         }
 
     }
@@ -70,7 +107,6 @@ interface SkTools {
 
         val path = view.context.getExternalFilesDir(null)?.absolutePath
         val str = "$path/FileOnTouchData.csv"
-        val file = File(str)
 
         try {
 
