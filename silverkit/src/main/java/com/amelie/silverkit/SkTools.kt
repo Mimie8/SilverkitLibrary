@@ -115,7 +115,7 @@ interface SkTools {
             var csvPrinter:CSVPrinter? = null
             csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT)
 
-            csvPrinter.printRecord(touchData.viewType, touchData.viewLocal, touchData.rawX, touchData.rawY, touchData.timestamp)
+            csvPrinter.printRecord(touchData.viewID, touchData.viewType, touchData.viewLocal, touchData.rawX, touchData.rawY, touchData.timestamp)
 
             csvPrinter.flush()
             csvPrinter.close()
