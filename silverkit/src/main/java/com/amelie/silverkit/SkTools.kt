@@ -35,16 +35,14 @@ interface SkTools {
 
             val viewType = getViewType(view)
             val viewLocal = getViewLocal(view)
-            val pressure = event.getPressure()
             val rawX = event.getRawX().toInt()
             val rawY = event.getRawY().toInt()
             val timestamp = Timestamp(System.currentTimeMillis())
 
-            val touchData = SkOnTouchData(viewType, viewLocal, pressure, rawX, rawY, timestamp)
+            val touchData = SkOnTouchData(viewType, viewLocal, rawX, rawY, timestamp)
 
-            Log.d("info", "SILVERKIT TOOL ONTOUCH : VIEW = $viewType | X = $rawX | Y = $rawY | PRESSURE = $pressure | TIMESTAMP : $timestamp")
+            Log.d("info", "SILVERKIT TOOL ONTOUCH : VIEW = $viewType | X = $rawX | Y = $rawY | TIMESTAMP : $timestamp")
 
-            //saveOnTouchData(view, touchData)
             saveData(view, touchData)
         }
 
@@ -67,55 +65,6 @@ interface SkTools {
         return view.context.javaClass.simpleName
     }
 
-    private fun saveOnTouchData(view: View, touchData: SkOnTouchData){
-
-        var fileWriter: FileWriter? = null
-
-        try {
-
-            //val path = view.context.filesDir.canonicalFile
-            val path = view.context.getExternalFilesDir(null)?.absolutePath
-            val file = File("$path/FileOnTouchData.csv")
-
-            fileWriter = FileWriter(file, true)
-
-            //If the file doesn't exist set the column
-            if(!file.exists()){
-                //fileWriter.append(CSV_HEADER)
-                fileWriter.append('\n')
-            }
-
-            //Save the on touch event info
-            fileWriter.append(touchData.viewType.toString())
-            fileWriter.append(',')
-            fileWriter.append(touchData.viewLocal.toString())
-            fileWriter.append(',')
-            fileWriter.append(touchData.pressure.toString())
-            fileWriter.append(',')
-            fileWriter.append(touchData.rawX.toString())
-            fileWriter.append(',')
-            fileWriter.append(touchData.rawY.toString())
-            fileWriter.append(',')
-            fileWriter.append(touchData.timestamp.toString())
-            fileWriter.append('\n')
-
-            Log.d("info", "SILVERKIT TOOL ONTOUCH : Write CSV successfully in \n$path/FileOnTouchData.csv)")
-
-        } catch (e: Exception) {
-            Log.d("info", "SILVERKIT TOOL ONTOUCH : Writing CSV error!)")
-            e.printStackTrace()
-        } finally {
-            try {
-                fileWriter!!.flush()
-                fileWriter.close()
-            } catch (e: IOException) {
-                Log.d("info", "SILVERKIT TOOL ONTOUCH : Flushing/closing error!)")
-                e.printStackTrace()
-            }
-        }
-
-    }
-
     @RequiresApi(Build.VERSION_CODES.O)
     private fun saveData(view: View, touchData: SkOnTouchData){
 
@@ -128,15 +77,9 @@ interface SkTools {
             val writer = FileWriter(str, true)
 
             var csvPrinter:CSVPrinter? = null
+            csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT)
 
-            //If file is empty, add header
-            if(file.length().toFloat() == 0f){
-                csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT.withHeader("VIEW_TYPE", "VIEW_ACTIVITY", "PRESSURE", "X", "Y", "TIMESTAMP"))
-            } else {
-                csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT)
-            }
-
-            csvPrinter.printRecord(touchData.viewType, touchData.viewLocal, touchData.pressure, touchData.rawX, touchData.rawY, touchData.timestamp)
+            csvPrinter.printRecord(touchData.viewType, touchData.viewLocal, touchData.rawX, touchData.rawY, touchData.timestamp)
 
             csvPrinter.flush()
             csvPrinter.close()
