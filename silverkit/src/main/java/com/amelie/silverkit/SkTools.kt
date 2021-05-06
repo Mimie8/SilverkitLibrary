@@ -214,7 +214,7 @@ interface SkTools {
 
             var line: String?
 
-            fileReader = BufferedReader(FileReader("customer.csv"))
+            fileReader = BufferedReader(FileReader("FileCoordinatesData.csv"))
 
             // Read CSV header
             fileReader.readLine()
