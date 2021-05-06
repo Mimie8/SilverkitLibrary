@@ -37,8 +37,8 @@ interface SkTools {
             val rawY = event.getRawY().toInt()
             val timestamp = Timestamp(System.currentTimeMillis())
             val coord = getViewCoord(view)
-            val coord_lt = coord[0]
-            val coord_dr = coord[1]
+            val coord_lt = coord[0].toString()
+            val coord_dr = coord[1].toString()
 
             val touchData = SkOnTouchData(viewID, viewType, viewLocal, rawX, rawY, timestamp)
             val viewData = SkViewCoordData(viewID, viewLocal, coord[0], coord[1])
