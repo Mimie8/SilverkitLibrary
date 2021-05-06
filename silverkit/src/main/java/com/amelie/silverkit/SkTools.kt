@@ -167,6 +167,9 @@ interface SkTools {
         //Read CSV
         val data:MutableList<List<String>> = readCSVCoordsData(str)
 
+        Log.d("info", "data: $data")
+        Log.d("info", "view data: ${viewData.viewID} | ${viewData.viewLocal} ")
+
         //If the coords aren't saved, saved them
         if(!data.contains(listOf(viewData.viewID, viewData.viewLocal))){
 
