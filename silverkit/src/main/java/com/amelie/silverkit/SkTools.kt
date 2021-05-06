@@ -11,6 +11,7 @@ import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
 import java.io.FileWriter
 import java.sql.Timestamp
+import java.util.*
 
 interface SkTools {
 
@@ -54,21 +55,21 @@ interface SkTools {
 
     }
 
-    private fun getViewCoord(view: View): List<IntArray>{
+    private fun getViewCoord(view: View): List<List<Int>>{
 
         val location = IntArray(2)
         view.getLocationOnScreen(location)
         val tl_x = location[0]
         val tl_y = location[1]
-        val coordTL = intArrayOf(tl_x, tl_y)
+        val coordTL = listOf(tl_x, tl_y)
 
         val width = view.measuredWidth
         val height = view.measuredHeight
         val dr_x = tl_x + width
         val dr_y = tl_y + height
-        val coordDR = intArrayOf(dr_x, dr_y)
+        val coordDR = listOf(dr_x, dr_y)
 
-        return listOf<IntArray>(coordTL, coordDR)
+        return listOf<List<Int>>(coordTL, coordDR)
     }
 
     private fun getViewID(view: View): String {

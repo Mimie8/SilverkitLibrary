@@ -4,11 +4,11 @@ class SkViewCoordData {
 
     var viewID : String? = null
     var viewLocal : String? = null
-    var coordTL: IntArray? = null
-    var coordDR: IntArray? = null
+    var coordTL: List<Int>? = null
+    var coordDR: List<Int>? = null
 
     constructor()
-    constructor(viewID: String, viewLocal: String, coordTL: IntArray, coordDR: IntArray){
+    constructor(viewID: String, viewLocal: String, coordTL: List<Int>, coordDR: List<Int>){
         this.viewID = viewID
         this.viewLocal = viewLocal
         this.coordTL = coordTL
