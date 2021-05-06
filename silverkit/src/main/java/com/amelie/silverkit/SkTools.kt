@@ -165,7 +165,7 @@ interface SkTools {
         FileWriter(str, true)
 
         //Read CSV
-        val data:MutableList<List<String>> = readCSVCoordsData()
+        val data:MutableList<List<String>> = readCSVCoordsData(str)
 
         //If the coords aren't saved, saved them
         if(!data.contains(listOf(viewData.viewID, viewData.viewLocal))){
@@ -204,7 +204,7 @@ interface SkTools {
 
     }
 
-    private fun readCSVCoordsData(): MutableList<List<String>>{
+    private fun readCSVCoordsData(path: String): MutableList<List<String>>{
 
         var data:MutableList<List<String>> = mutableListOf()
 
@@ -214,7 +214,7 @@ interface SkTools {
 
             var line: String?
 
-            fileReader = BufferedReader(FileReader("FileCoordinatesData.csv"))
+            fileReader = BufferedReader(FileReader(path))
 
             // Read CSV header
             fileReader.readLine()
