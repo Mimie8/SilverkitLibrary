@@ -159,14 +159,16 @@ interface SkTools {
 
     private fun saveCoordinates(view:View, viewData:SkViewCoordData){
 
+        //Create CSV if it doesn't exist
+        val path = view.context.getExternalFilesDir(null)?.absolutePath
+        val str = "$path/FileCoordinatesData.csv"
+        FileWriter(str, true)
+
         //Read CSV
         val data:MutableList<List<String>> = readCSVCoordsData()
 
         //If the coords aren't saved, saved them
         if(!data.contains(listOf(viewData.viewID, viewData.viewLocal))){
-
-            val path = view.context.getExternalFilesDir(null)?.absolutePath
-            val str = "$path/FileCoordinatesData.csv"
 
             try {
 
