@@ -37,6 +37,8 @@ interface SkTools {
             val rawY = event.getRawY().toInt()
             val timestamp = Timestamp(System.currentTimeMillis())
             val coord = getViewCoord(view)
+            val coord_lt = coord[0]
+            val coord_dr = coord[1]
 
             val touchData = SkOnTouchData(viewID, viewType, viewLocal, rawX, rawY, timestamp)
             val viewData = SkViewCoordData(viewID, viewLocal, coord[0], coord[1])
@@ -47,7 +49,7 @@ interface SkTools {
             //Save view coordinates in CSV file
             //saveCoordinates(view, viewData)
 
-            Log.d("info", "SILVERKIT TOOL ONTOUCH : ID = $viewID | VIEW = $viewType | LOCAL = $viewLocal | COORD = $coord | X = $rawX | Y = $rawY | TIMESTAMP : $timestamp")
+            Log.d("info", "SILVERKIT TOOL ONTOUCH : ID = $viewID | VIEW = $viewType | LOCAL = $viewLocal | COORD_TL = $coord_lt | COORD_DR = $coord_dr | X = $rawX | Y = $rawY | TIMESTAMP : $timestamp")
         }
 
     }
