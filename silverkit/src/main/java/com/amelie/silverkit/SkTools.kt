@@ -9,7 +9,10 @@ import com.amelie.silverkit.datamanager.SkOnTouchData
 import com.amelie.silverkit.datamanager.SkViewCoordData
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
+import java.io.BufferedReader
+import java.io.FileReader
 import java.io.FileWriter
+import java.io.IOException
 import java.sql.Timestamp
 import java.util.*
 
@@ -48,12 +51,14 @@ interface SkTools {
             saveData(view, touchData)
 
             //Save view coordinates in CSV file
-            //saveCoordinates(view, viewData)
+            saveCoordinates(view, viewData)
 
             Log.d("info", "SILVERKIT TOOL ONTOUCH : ID = $viewID | VIEW = $viewType | LOCAL = $viewLocal | COORD_TL = $coord_lt | COORD_DR = $coord_dr | X = $rawX | Y = $rawY | TIMESTAMP : $timestamp")
         }
 
     }
+
+    fun getType() : ViewType
 
     private fun getViewCoord(view: View): List<List<Int>>{
 
@@ -118,8 +123,6 @@ interface SkTools {
 
     }
 
-    fun getType() : ViewType
-
     private fun getViewLocal(view: View) : String {
         return view.context.javaClass.simpleName
     }
@@ -154,31 +157,95 @@ interface SkTools {
 
     }
 
-    private fun saveCoordinates(view:View, viewData: SkViewCoordData){
+    private fun saveCoordinates(view:View, viewData:SkViewCoordData){
 
-        val path = view.context.getExternalFilesDir(null)?.absolutePath
-        val str = "$path/FileCoordinatesData.csv"
+        //Read CSV
+        val data:MutableList<List<String>> = readCSVCoordsData()
+
+        //If the coords aren't saved, saved them
+        if(!data.contains(listOf(viewData.viewID, viewData.viewLocal))){
+
+            val path = view.context.getExternalFilesDir(null)?.absolutePath
+            val str = "$path/FileCoordinatesData.csv"
+
+            try {
+
+                val writer = FileWriter(str, true)
+
+                var csvPrinter:CSVPrinter? = null
+                csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT)
+
+                val coordTL = viewData.coordTL
+                val tl_x = coordTL?.get(0)
+                val tl_y = coordTL?.get(1)
+
+                val coordDR = viewData.coordDR
+                val dr_x = coordDR?.get(0)
+                val dr_y = coordDR?.get(1)
+
+                csvPrinter.printRecord(viewData.viewID, viewData.viewLocal, tl_x, tl_y, dr_x, dr_y)
+
+                csvPrinter.flush()
+                csvPrinter.close()
+
+                println("Write coordinates data in CSV successfully!")
+
+            } catch (e: Exception) {
+
+                println("Writing coordinates data in CSV error!")
+                e.printStackTrace()
+
+            }
+
+        }
+
+
+    }
+
+    private fun readCSVCoordsData(): MutableList<List<String>>{
+
+        var data:MutableList<List<String>> = mutableListOf()
+
+        var fileReader: BufferedReader? = null
 
         try {
 
-            val writer = FileWriter(str, true)
+            var line: String?
 
-            var csvPrinter:CSVPrinter? = null
-            csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT)
+            fileReader = BufferedReader(FileReader("customer.csv"))
 
-            csvPrinter.printRecord(viewData.viewID, viewData.viewLocal, viewData.coordTL, viewData.coordDR)
+            // Read CSV header
+            fileReader.readLine()
 
-            csvPrinter.flush()
-            csvPrinter.close()
+            // Read the file line by line starting from the second line
+            line = fileReader.readLine()
+            while (line != null) {
+                val tokens = line.split(",")
+                if (tokens.isNotEmpty()) {
 
-            println("Write coordinates data in CSV successfully!")
+                    val id = tokens[0]
+                    val activity = tokens[1]
+                    data.add(listOf(id,activity))
+
+                }
+
+                line = fileReader.readLine()
+            }
 
         } catch (e: Exception) {
-
-            println("Writing coordinates data in CSV error!")
+            println("Reading CSV Error!")
             e.printStackTrace()
-
+        } finally {
+            try {
+                fileReader!!.close()
+            } catch (e: IOException) {
+                println("Closing fileReader Error!")
+                e.printStackTrace()
+            }
         }
+
+        return data
     }
+
 
 }
