@@ -209,7 +209,7 @@ interface SkTools {
 
     private fun readCSVCoordsData(path: String): MutableList<List<String>>{
 
-        var data:MutableList<List<String>> = mutableListOf()
+        val data:MutableList<List<String>> = mutableListOf()
 
         var fileReader: BufferedReader? = null
 
