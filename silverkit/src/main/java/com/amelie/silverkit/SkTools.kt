@@ -220,10 +220,9 @@ interface SkTools {
             fileReader = BufferedReader(FileReader(path))
 
             // Read CSV header
-            fileReader.readLine()
-
-            // Read the file line by line starting from the second line
             line = fileReader.readLine()
+
+            // Read the file line by line starting from the first line
             while (line != null) {
                 val tokens = line.split(",")
                 if (tokens.isNotEmpty()) {
