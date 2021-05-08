@@ -101,13 +101,13 @@ interface SkTools {
             //assign the id
             view.id = id
             */
-             
+
 
             view.id = View.generateViewId()
 
         }
 
-        return view.context.resources.getResourceEntryName(view.id)
+        return getViewType(view).toString() + view.id
 
     }
 
