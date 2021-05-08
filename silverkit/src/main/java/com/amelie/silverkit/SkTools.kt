@@ -87,6 +87,8 @@ interface SkTools {
         // view doesn't have an id
         if (view.id == View.NO_ID) {
 
+            /*
+
             // generate an id
             var id: Int = (1..1000).random()
 
@@ -98,6 +100,10 @@ interface SkTools {
 
             //assign the id
             view.id = id
+            */
+             
+
+            view.id = View.generateViewId()
 
         }
 
