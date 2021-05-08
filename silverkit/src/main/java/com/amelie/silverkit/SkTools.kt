@@ -1,5 +1,9 @@
 package com.amelie.silverkit
 
+import android.content.Context
+import android.content.pm.PackageManager
+import android.content.res.Resources
+import android.content.res.Resources.NotFoundException
 import android.os.Build
 import android.util.Log
 import android.view.MotionEvent
@@ -15,6 +19,7 @@ import java.io.FileWriter
 import java.io.IOException
 import java.sql.Timestamp
 import java.util.*
+
 
 interface SkTools {
 
@@ -80,21 +85,19 @@ interface SkTools {
     private fun getViewID(view: View): String {
 
         // view doesn't have an id
-        if (view.getId() == View.NO_ID) {
+        if (view.id == View.NO_ID) {
 
             // generate an id
-            var id: Int = (0..1000).random()
-            var name: String = view.context.resources.getResourceEntryName(id)
+            var id: Int = (1..1000).random()
 
             //if the id is already used, generate a new one
-            while(checkIDExist(name, view.context.getPackageName())){
+            while(isResourceIdInPackage(view.context, view.context.packageName, id)){
                 // try to generate a new id
-                id = (0..1000).random()
-                name = view.context.resources.getResourceEntryName(id)
+                id = (1..1000).random()
             }
 
             //assign the id
-            view.setId(id)
+            view.id = id
 
         }
 
@@ -102,14 +105,31 @@ interface SkTools {
 
     }
 
-    private fun checkIDExist(name: String, packageName: String): Boolean{
-
-        if (name == null || !name.startsWith(packageName)) {
-            // id is not an id used by a layout element.
+    private fun isResourceIdInPackage(context: Context, packageName: String?, resId: Int): Boolean {
+        if (packageName == null || resId == 0) {
             return false
         }
-        return true
+        var res: Resources? = null
+        if (packageName == context.packageName) {
+            res = context.resources
+        } else {
+            try {
+                res = context.packageManager.getResourcesForApplication(packageName)
+            } catch (e: PackageManager.NameNotFoundException) {
+                Log.d("info", packageName + "does not contain " + resId + " ... " + e.message)
+            }
+        }
+        return res?.let { isResourceIdInResources(it, resId) } ?: false
+    }
 
+    private fun isResourceIdInResources(res: Resources, resId: Int): Boolean {
+        return try {
+            res.getResourceName(resId)
+            //Didn't catch so id is in res
+            true
+        } catch (e: NotFoundException) {
+            false
+        }
     }
 
     private fun getViewType(view: View) : ViewType{
