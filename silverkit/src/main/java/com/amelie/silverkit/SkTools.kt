@@ -281,41 +281,36 @@ interface SkTools {
 
             fileReader = BufferedReader(FileReader(str))
 
-            // Read CSV header
+            // Read CSV first line
             line = fileReader.readLine()
 
-            // Read the file line by line starting from the first line
-            while (line != null) {
-                val tokens = line.split(",")
-                if (tokens.isEmpty()) {
+            // if there's not even a line in the file, write in it the hardware info
+            if (line == null) {
 
-                    //Data needs to be saved
-                    try {
+                //Data needs to be saved
+                try {
 
-                        val writer = FileWriter(str, true)
+                    val writer = FileWriter(str, true)
 
-                        var csvPrinter:CSVPrinter? = null
-                        csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT)
+                    var csvPrinter:CSVPrinter? = null
+                    csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT)
 
-                        val hardwareData = getHardwareData(view)
+                    val hardwareData = getHardwareData(view)
 
-                        csvPrinter.printRecord(hardwareData.screenWidth, hardwareData.screenHeight)
+                    csvPrinter.printRecord(hardwareData.screenWidth, hardwareData.screenHeight)
 
-                        csvPrinter.flush()
-                        csvPrinter.close()
+                    csvPrinter.flush()
+                    csvPrinter.close()
 
-                        println("Write hardware data in CSV successfully!")
+                    println("Write hardware data in CSV successfully!")
 
-                    } catch (e: Exception) {
+                } catch (e: Exception) {
 
-                        println("Writing hardware data in CSV error!")
-                        e.printStackTrace()
-
-                    }
+                    println("Writing hardware data in CSV error!")
+                    e.printStackTrace()
 
                 }
 
-                line = fileReader.readLine()
             }
 
         } catch (e: Exception) {
