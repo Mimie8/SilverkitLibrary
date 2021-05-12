@@ -279,7 +279,7 @@ interface SkTools {
 
             var line: String?
 
-            fileReader = BufferedReader(FileReader(path))
+            fileReader = BufferedReader(FileReader(str))
 
             // Read CSV header
             line = fileReader.readLine()
