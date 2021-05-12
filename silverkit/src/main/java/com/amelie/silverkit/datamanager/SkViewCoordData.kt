@@ -1,6 +1,6 @@
 package com.amelie.silverkit.datamanager
 
-class SkViewCoordData {
+class SkCoordsData {
 
     var viewID : String? = null
     var viewLocal : String? = null
@@ -16,6 +16,6 @@ class SkViewCoordData {
     }
 
     override fun toString(): String {
-        return "SkViewCoordData(viewID=$viewID, viewLocal=$viewLocal, coordTL=$coordTL, coordDR=$coordDR)"
+        return "SkCoordsData(viewID=$viewID, viewLocal=$viewLocal, coordTL=$coordTL, coordDR=$coordDR)"
     }
 }

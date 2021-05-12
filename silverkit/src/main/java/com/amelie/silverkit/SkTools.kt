@@ -1,16 +1,20 @@
 package com.amelie.silverkit
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.content.res.Resources
 import android.content.res.Resources.NotFoundException
+import android.graphics.Point
 import android.os.Build
+import android.util.DisplayMetrics
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
+import android.view.WindowManager
 import androidx.annotation.RequiresApi
-import com.amelie.silverkit.datamanager.SkOnTouchData
-import com.amelie.silverkit.datamanager.SkViewCoordData
+import com.amelie.silverkit.datamanager.*
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
 import java.io.BufferedReader
@@ -49,11 +53,11 @@ interface SkTools {
             val coord_lt = coord[0].toString()
             val coord_dr = coord[1].toString()
 
-            val touchData = SkOnTouchData(viewID, viewType, viewLocal, rawX, rawY, timestamp)
-            val viewData = SkViewCoordData(viewID, viewLocal, coord[0], coord[1])
+            val touchData = SkClicksData(viewID, viewType, viewLocal, rawX, rawY, timestamp)
+            val viewData = SkCoordsData(viewID, viewLocal, coord[0], coord[1])
 
             //Save touch data in CSV file
-            saveData(view, touchData)
+            saveClicks(view, touchData)
 
             //Save view coordinates in CSV file
             saveCoordinates(view, viewData)
@@ -86,25 +90,7 @@ interface SkTools {
 
         // view doesn't have an id
         if (view.id == View.NO_ID) {
-
-            /*
-
-            // generate an id
-            var id: Int = (1..1000).random()
-
-            //if the id is already used, generate a new one
-            while(isResourceIdInPackage(view.context, view.context.packageName, id)){
-                // try to generate a new id
-                id = (1..1000).random()
-            }
-
-            //assign the id
-            view.id = id
-            */
-
-
             view.id = View.generateViewId()
-
         }
 
         return getViewType(view).toString() + view.id
@@ -154,10 +140,10 @@ interface SkTools {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun saveData(view: View, touchData: SkOnTouchData){
+    private fun saveClicks(view: View, touchData: SkClicksData){
 
         val path = view.context.getExternalFilesDir(null)?.absolutePath
-        val str = "$path/FileOnTouchData.csv"
+        val str = "$path/ClicksData.csv"
 
         try {
 
@@ -171,11 +157,11 @@ interface SkTools {
             csvPrinter.flush()
             csvPrinter.close()
 
-            println("Write touch data in CSV successfully!")
+            println("Write click data in CSV successfully!")
 
         } catch (e: Exception) {
 
-            println("Writing touch data in CSV error!")
+            println("Writing click data in CSV error!")
             e.printStackTrace()
 
         }
@@ -183,18 +169,15 @@ interface SkTools {
 
     }
 
-    private fun saveCoordinates(view:View, viewData:SkViewCoordData){
+    private fun saveCoordinates(view:View, viewData: SkCoordsData){
 
         //Create CSV if it doesn't exist
         val path = view.context.getExternalFilesDir(null)?.absolutePath
-        val str = "$path/FileCoordinatesData.csv"
+        val str = "$path/CoordinatesData.csv"
         FileWriter(str, true)
 
         //Read CSV
         val data:MutableList<List<String>> = readCSVCoordsData(str)
-
-        Log.d("info", "data: $data")
-        Log.d("info", "view data: ${viewData.viewID} | ${viewData.viewLocal} ")
 
         //If the coords aren't saved, saved them
         if(!data.contains(listOf(viewData.viewID, viewData.viewLocal))){
@@ -277,5 +260,104 @@ interface SkTools {
         return data
     }
 
+    private fun saveHardwareData(view:View){
+
+        var fileReader: BufferedReader? = null
+
+        //Create CSV if it doesn't exist
+        val path = view.context.getExternalFilesDir(null)?.absolutePath
+        val str = "$path/HardwareData.csv"
+        FileWriter(str, true)
+
+        try {
+
+            var line: String?
+
+            fileReader = BufferedReader(FileReader(path))
+
+            // Read CSV header
+            line = fileReader.readLine()
+
+            // Read the file line by line starting from the first line
+            while (line != null) {
+                val tokens = line.split(",")
+                if (tokens.isNotEmpty()) {
+
+                    //Data needs to be saved
+                    try {
+
+                        val writer = FileWriter(str, true)
+
+                        var csvPrinter:CSVPrinter? = null
+                        csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT)
+
+                        val hardwareData = getHardwareData(view)
+
+                        csvPrinter.printRecord(hardwareData.screenWidth, hardwareData.screenHeight)
+
+                        csvPrinter.flush()
+                        csvPrinter.close()
+
+                        println("Write hardware data in CSV successfully!")
+
+                    } catch (e: Exception) {
+
+                        println("Writing hardware data in CSV error!")
+                        e.printStackTrace()
+
+                    }
+
+                }
+
+                line = fileReader.readLine()
+            }
+
+        } catch (e: Exception) {
+            println("Reading HardwareData CSV Error!")
+            e.printStackTrace()
+        } finally {
+            try {
+                fileReader!!.close()
+            } catch (e: IOException) {
+                println("Closing HardwareData CSV fileReader Error!")
+                e.printStackTrace()
+            }
+        }
+    }
+
+    private fun getHardwareData(view:View):SkHardwareData{
+
+        val hardwareData = SkHardwareData()
+
+        //Get Screen width and height
+        val screenDimensions = getScreenSizeIncludingTopBottomBar(view.context)
+        hardwareData.screenWidth = screenDimensions[0]
+        hardwareData.screenHeight = screenDimensions[1]
+
+        return hardwareData
+
+    }
+
+    @SuppressLint("ServiceCast")
+    fun getScreenSizeIncludingTopBottomBar(context: Context): IntArray {
+        val screenDimensions = IntArray(2) // width[0], height[1]
+        val x: Int
+        val y: Int
+        val orientation = context.resources.configuration.orientation
+        val wm = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+        val display = wm.defaultDisplay
+        val screenSize = Point()
+        display.getRealSize(screenSize)
+        x = screenSize.x
+        y = screenSize.y
+        screenDimensions[0] = if (orientation == Configuration.ORIENTATION_PORTRAIT) x else y // width
+        screenDimensions[1] = if (orientation == Configuration.ORIENTATION_PORTRAIT) y else x // height
+
+
+        Log.d("info","getScreenSizeIncludingTopBottomBar : width ${screenDimensions[0]} height : ${screenDimensions[1]}")
+
+
+        return screenDimensions
+    }
 
 }

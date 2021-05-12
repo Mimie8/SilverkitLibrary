@@ -3,7 +3,7 @@ package com.amelie.silverkit.datamanager
 import com.amelie.silverkit.SkTools
 import java.sql.Timestamp
 
-class SkOnTouchData {
+class SkClicksData {
 
     var viewID : String? = null
     var viewType : SkTools.ViewType? = null
@@ -23,7 +23,7 @@ class SkOnTouchData {
     }
 
     override fun toString(): String {
-        return "SkOnTouchData(viewID=$viewID, viewType=$viewType, viewLocal=$viewLocal, rawX=$rawX, rawY=$rawY, timestamp=$timestamp)"
+        return "SkClicksData(viewID=$viewID, viewType=$viewType, viewLocal=$viewLocal, rawX=$rawX, rawY=$rawY, timestamp=$timestamp)"
     }
 
 }
