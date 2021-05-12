@@ -62,6 +62,9 @@ interface SkTools {
             //Save view coordinates in CSV file
             saveCoordinates(view, viewData)
 
+            //save hardware info if necessary (only once but hey idk how to call it only one)
+            saveHardwareData(view)
+
             Log.d("info", "SILVERKIT TOOL ONTOUCH : ID = $viewID | VIEW = $viewType | LOCAL = $viewLocal | COORD_TL = $coord_lt | COORD_DR = $coord_dr | X = $rawX | Y = $rawY | TIMESTAMP : $timestamp")
         }
 
@@ -97,6 +100,7 @@ interface SkTools {
 
     }
 
+    /*
     private fun isResourceIdInPackage(context: Context, packageName: String?, resId: Int): Boolean {
         if (packageName == null || resId == 0) {
             return false
@@ -123,6 +127,8 @@ interface SkTools {
             false
         }
     }
+    */
+
 
     private fun getViewType(view: View) : ViewType{
 
@@ -281,7 +287,7 @@ interface SkTools {
             // Read the file line by line starting from the first line
             while (line != null) {
                 val tokens = line.split(",")
-                if (tokens.isNotEmpty()) {
+                if (tokens.isEmpty()) {
 
                     //Data needs to be saved
                     try {
