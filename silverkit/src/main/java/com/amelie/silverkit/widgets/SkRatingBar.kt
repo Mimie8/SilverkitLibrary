@@ -5,11 +5,10 @@ import android.content.Context
 import android.util.AttributeSet
 import android.util.Log
 import android.view.MotionEvent
-import android.widget.RatingBar
+import androidx.appcompat.widget.AppCompatRatingBar
 import com.amelie.silverkit.SkTools
 
-@SuppressLint("AppCompatCustomView")
-class SkRatingBar : RatingBar, SkTools {
+class SkRatingBar : AppCompatRatingBar, SkTools {
 
     constructor(context : Context): super(context)
     constructor(context : Context, attributeSet: AttributeSet): super(context, attributeSet)
@@ -23,6 +22,7 @@ class SkRatingBar : RatingBar, SkTools {
         return SkTools.ViewType.RATINGBAR
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(ev: MotionEvent): Boolean {
         toolOnTouch(this, ev)
         return super.onTouchEvent(ev)

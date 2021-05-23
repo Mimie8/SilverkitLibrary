@@ -6,10 +6,10 @@ import android.util.AttributeSet
 import android.util.Log
 import android.view.MotionEvent
 import android.widget.ImageView
+import androidx.appcompat.widget.AppCompatImageView
 import com.amelie.silverkit.SkTools
 
-@SuppressLint("AppCompatCustomView")
-class SkImageView : ImageView, SkTools {
+class SkImageView : AppCompatImageView, SkTools {
 
     constructor(context : Context): super(context)
     constructor(context : Context, attributeSet: AttributeSet): super(context, attributeSet)
@@ -23,6 +23,7 @@ class SkImageView : ImageView, SkTools {
         return SkTools.ViewType.IMAGEVIEW
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(ev: MotionEvent): Boolean {
         toolOnTouch(this, ev)
         return super.onTouchEvent(ev)

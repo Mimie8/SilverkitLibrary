@@ -5,11 +5,10 @@ import android.content.Context
 import android.util.AttributeSet
 import android.util.Log
 import android.view.MotionEvent
-import android.widget.CheckBox
+import androidx.appcompat.widget.AppCompatCheckBox
 import com.amelie.silverkit.SkTools
 
-@SuppressLint("AppCompatCustomView")
-class SkCheckBox : CheckBox, SkTools {
+class SkCheckBox : AppCompatCheckBox, SkTools {
 
     constructor(context : Context): super(context)
     constructor(context : Context, attributeSet: AttributeSet): super(context, attributeSet)
@@ -23,6 +22,7 @@ class SkCheckBox : CheckBox, SkTools {
         return SkTools.ViewType.CHECKBOX
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(ev: MotionEvent): Boolean {
         toolOnTouch(this, ev)
         return super.onTouchEvent(ev)

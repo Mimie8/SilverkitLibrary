@@ -5,11 +5,10 @@ import android.content.Context
 import android.util.AttributeSet
 import android.util.Log
 import android.view.MotionEvent
-import android.widget.RadioButton
+import androidx.appcompat.widget.AppCompatRadioButton
 import com.amelie.silverkit.SkTools
 
-@SuppressLint("AppCompatCustomView")
-class SkRadioButton : RadioButton, SkTools {
+class SkRadioButton : AppCompatRadioButton, SkTools {
 
     constructor(context : Context): super(context)
     constructor(context : Context, attributeSet: AttributeSet): super(context, attributeSet)
@@ -23,6 +22,7 @@ class SkRadioButton : RadioButton, SkTools {
         return SkTools.ViewType.RADIOBUTTON
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(ev: MotionEvent): Boolean {
         toolOnTouch(this, ev)
         return super.onTouchEvent(ev)

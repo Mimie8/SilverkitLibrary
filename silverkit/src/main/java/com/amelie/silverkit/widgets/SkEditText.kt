@@ -5,11 +5,11 @@ import android.content.Context
 import android.util.AttributeSet
 import android.util.Log
 import android.view.MotionEvent
-import android.widget.EditText
+import androidx.appcompat.widget.AppCompatEditText
 import com.amelie.silverkit.SkTools
 
-@SuppressLint("AppCompatCustomView")
-class SkEditText : EditText, SkTools {
+
+class SkEditText : AppCompatEditText, SkTools {
 
     constructor(context : Context): super(context)
     constructor(context : Context, attributeSet: AttributeSet): super(context, attributeSet)
@@ -23,6 +23,7 @@ class SkEditText : EditText, SkTools {
         return SkTools.ViewType.EDITTEXT
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(ev: MotionEvent): Boolean {
         toolOnTouch(this, ev)
         return super.onTouchEvent(ev)

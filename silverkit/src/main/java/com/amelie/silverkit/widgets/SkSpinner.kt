@@ -6,10 +6,10 @@ import android.util.AttributeSet
 import android.util.Log
 import android.view.MotionEvent
 import android.widget.Spinner
+import androidx.appcompat.widget.AppCompatSpinner
 import com.amelie.silverkit.SkTools
 
-@SuppressLint("AppCompatCustomView")
-class SkSpinner : Spinner, SkTools {
+class SkSpinner : AppCompatSpinner, SkTools {
 
     constructor(context : Context): super(context)
     constructor(context : Context, attributeSet: AttributeSet): super(context, attributeSet)
@@ -23,6 +23,7 @@ class SkSpinner : Spinner, SkTools {
         return SkTools.ViewType.SPINNER
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(ev: MotionEvent): Boolean {
         toolOnTouch(this, ev)
         return super.onTouchEvent(ev)

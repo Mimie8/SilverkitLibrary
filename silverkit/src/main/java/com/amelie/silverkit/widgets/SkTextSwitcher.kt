@@ -1,5 +1,6 @@
 package com.amelie.silverkit.widgets
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
 import android.util.Log
@@ -20,6 +21,7 @@ class SkTextSwitcher : TextSwitcher, SkTools {
         return SkTools.ViewType.TEXTSWITCHER
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(ev: MotionEvent): Boolean {
         toolOnTouch(this, ev)
         return super.onTouchEvent(ev)

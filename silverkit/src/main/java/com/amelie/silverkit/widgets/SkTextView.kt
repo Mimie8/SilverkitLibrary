@@ -1,5 +1,6 @@
 package com.amelie.silverkit.widgets
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
 import android.util.Log
@@ -21,9 +22,20 @@ class SkTextView : TextureView, SkTools {
         return SkTools.ViewType.TEXTVIEW
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(ev: MotionEvent): Boolean {
         toolOnTouch(this, ev)
         return super.onTouchEvent(ev)
     }
 
 }
+
+
+
+
+
+
+
+
+
+

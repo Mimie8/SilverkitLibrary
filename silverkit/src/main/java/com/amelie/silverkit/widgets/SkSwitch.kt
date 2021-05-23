@@ -1,13 +1,15 @@
 package com.amelie.silverkit.widgets
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
 import android.util.Log
 import android.view.MotionEvent
 import android.widget.Switch
+import androidx.appcompat.widget.SwitchCompat
 import com.amelie.silverkit.SkTools
 
-class SkSwitch : Switch, SkTools {
+class SkSwitch : SwitchCompat, SkTools {
 
     constructor(context : Context): super(context)
     constructor(context : Context, attributeSet: AttributeSet): super(context, attributeSet)
@@ -21,6 +23,7 @@ class SkSwitch : Switch, SkTools {
         return SkTools.ViewType.SWITCH
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(ev: MotionEvent): Boolean {
         toolOnTouch(this, ev)
         return super.onTouchEvent(ev)

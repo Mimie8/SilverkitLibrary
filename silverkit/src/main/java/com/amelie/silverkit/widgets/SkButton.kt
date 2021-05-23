@@ -5,11 +5,11 @@ import android.content.Context
 import android.util.AttributeSet
 import android.util.Log
 import android.view.MotionEvent
-import android.widget.Button
+import androidx.appcompat.widget.AppCompatButton
 import com.amelie.silverkit.SkTools
 
-@SuppressLint("AppCompatCustomView")
-class SkButton : Button, SkTools {
+
+class SkButton : AppCompatButton, SkTools {
 
     constructor(context : Context): super(context)
     constructor(context : Context, attributeSet: AttributeSet): super(context, attributeSet)
@@ -23,9 +23,11 @@ class SkButton : Button, SkTools {
         return SkTools.ViewType.BUTTON
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(ev: MotionEvent): Boolean {
         toolOnTouch(this, ev)
         return super.onTouchEvent(ev)
     }
 
 }
+

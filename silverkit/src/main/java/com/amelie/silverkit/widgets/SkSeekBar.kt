@@ -5,11 +5,10 @@ import android.content.Context
 import android.util.AttributeSet
 import android.util.Log
 import android.view.MotionEvent
-import android.widget.SeekBar
+import androidx.appcompat.widget.AppCompatSeekBar
 import com.amelie.silverkit.SkTools
 
-@SuppressLint("AppCompatCustomView")
-class SkSeekBar : SeekBar, SkTools {
+class SkSeekBar : AppCompatSeekBar, SkTools {
 
     constructor(context : Context): super(context)
     constructor(context : Context, attributeSet: AttributeSet): super(context, attributeSet)
@@ -23,6 +22,7 @@ class SkSeekBar : SeekBar, SkTools {
         return SkTools.ViewType.SEEKBAR
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(ev: MotionEvent): Boolean {
         toolOnTouch(this, ev)
         return super.onTouchEvent(ev)

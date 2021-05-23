@@ -5,11 +5,10 @@ import android.content.Context
 import android.util.AttributeSet
 import android.util.Log
 import android.view.MotionEvent
-import android.widget.ToggleButton
+import androidx.appcompat.widget.AppCompatToggleButton
 import com.amelie.silverkit.SkTools
 
-@SuppressLint("AppCompatCustomView")
-class SkToggleButton : ToggleButton, SkTools {
+class SkToggleButton : AppCompatToggleButton, SkTools {
 
     constructor(context : Context): super(context)
     constructor(context : Context, attributeSet: AttributeSet): super(context, attributeSet)
@@ -23,6 +22,7 @@ class SkToggleButton : ToggleButton, SkTools {
         return SkTools.ViewType.TOGGLEBUTTON
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(ev: MotionEvent): Boolean {
         toolOnTouch(this, ev)
         return super.onTouchEvent(ev)

@@ -1,5 +1,6 @@
 package com.amelie.silverkit.widgets
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Build
 import android.util.AttributeSet
@@ -23,6 +24,7 @@ class SkActionMenuView : ActionMenuView, SkTools {
         return SkTools.ViewType.ACTIONMENUVIEW
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(ev: MotionEvent): Boolean {
         toolOnTouch(this, ev)
         return super.onTouchEvent(ev)

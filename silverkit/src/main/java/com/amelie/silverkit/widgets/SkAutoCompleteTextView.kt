@@ -5,11 +5,11 @@ import android.content.Context
 import android.util.AttributeSet
 import android.util.Log
 import android.view.MotionEvent
-import android.widget.AutoCompleteTextView
+import androidx.appcompat.widget.AppCompatAutoCompleteTextView
 import com.amelie.silverkit.SkTools
 
-@SuppressLint("AppCompatCustomView")
-class SkAutoCompleteTextView : AutoCompleteTextView, SkTools {
+
+class SkAutoCompleteTextView : AppCompatAutoCompleteTextView, SkTools {
 
     constructor(context : Context): super(context)
     constructor(context : Context, attributeSet: AttributeSet): super(context, attributeSet)
@@ -23,6 +23,7 @@ class SkAutoCompleteTextView : AutoCompleteTextView, SkTools {
         return SkTools.ViewType.AUTOCOMPLETETEXTVIEW
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(ev: MotionEvent): Boolean {
         toolOnTouch(this, ev)
         return super.onTouchEvent(ev)
