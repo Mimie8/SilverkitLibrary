@@ -1,17 +1,16 @@
 package com.amelie.silverkit
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
-import android.content.pm.PackageManager
+import android.content.SharedPreferences
 import android.content.res.Configuration
-import android.content.res.Resources
-import android.content.res.Resources.NotFoundException
 import android.graphics.Point
 import android.os.Build
-import android.util.DisplayMetrics
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManager
 import androidx.annotation.RequiresApi
 import com.amelie.silverkit.datamanager.*
@@ -23,6 +22,7 @@ import java.io.FileWriter
 import java.io.IOException
 import java.sql.Timestamp
 import java.util.*
+import kotlin.collections.HashSet
 
 
 interface SkTools {
@@ -38,37 +38,86 @@ interface SkTools {
         TEXTVIEW, TIMEPICKER, TOGGLEBUTTON, VIDEOVIEW, VIEWANIMATOR, VIEWFLIPPER, VIEWSWITCHER
     }
 
+
+    fun SkInitActivityLayout(activity: Activity){
+
+        val prefs:SharedPreferences = activity.baseContext.getSharedPreferences("activities", Context.MODE_PRIVATE)
+        val firstStart = prefs.getStringSet("FirstStart", HashSet<String>())
+        val editor: SharedPreferences.Editor = prefs.edit()
+
+        val rv : ViewGroup? = activity.window.decorView.findViewById(android.R.id.content) as ViewGroup?
+
+        //if root view is not null and if the activity isn't already saved in shared pref
+        if (rv != null && !(firstStart?.contains(activity.localClassName))!!){
+
+            val childCount : Int = rv.childCount
+
+            //Check for every view in the activity if it's a Sk view, if yes save it in the csv
+            for (i in 0 until childCount) {
+                val v: View = rv.getChildAt(i)
+
+                if(v is SkTools){
+
+                    val viewID = getViewID(v)
+                    val viewLocal = getViewLocal(v)
+                    val coord = getViewCoord(v)
+                    val viewData = SkCoordsData(viewID, viewLocal, coord[0], coord[1])
+
+                    //Save view coordinates in CSV file if the view coordinates aren't already saved
+                    saveCoordinates(v, viewData)
+                }
+
+            }
+
+            //Save new shared pref by adding the activity
+            val hash = HashSet<String>(firstStart)
+            hash.add(activity.localClassName)
+            editor.putStringSet("activities", hash)
+            editor.apply()
+
+        }
+
+
+    }
+
     fun toolOnTouch(view: View, event: MotionEvent) {
 
-        if(event.getAction() == MotionEvent.ACTION_DOWN){
+        if(event.action == MotionEvent.ACTION_DOWN){
             //PRESS ON THE VIEW
 
             val viewID = getViewID(view)
             val viewType = getViewType(view)
             val viewLocal = getViewLocal(view)
-            val rawX = event.getRawX().toInt()
-            val rawY = event.getRawY().toInt()
+            val rawX = event.rawX.toInt()
+            val rawY = event.rawY.toInt()
             val timestamp = Timestamp(System.currentTimeMillis())
             val coord = getViewCoord(view)
-            val coord_lt = coord[0].toString()
-            val coord_dr = coord[1].toString()
+            val coordTL = coord[0].toString()
+            val coordDR = coord[1].toString()
 
             val touchData = SkClicksData(viewID, viewType, viewLocal, rawX, rawY, timestamp)
-            val viewData = SkCoordsData(viewID, viewLocal, coord[0], coord[1])
 
             //Save touch data in CSV file
             saveClicks(view, touchData)
 
-            //Save view coordinates in CSV file
-            saveCoordinates(view, viewData)
-
-            //save hardware info if necessary (only once but hey idk how to call it only one)
+            //Save hardware info in CSV file if the info isn't already saved
             saveHardwareData(view)
 
-            Log.d("info", "SILVERKIT TOOL ONTOUCH : ID = $viewID | VIEW = $viewType | LOCAL = $viewLocal | COORD_TL = $coord_lt | COORD_DR = $coord_dr | X = $rawX | Y = $rawY | TIMESTAMP : $timestamp")
+            Log.d("info", "SILVERKIT TOOL ONTOUCH : ID = $viewID | VIEW = $viewType |LOCAL = $viewLocal | COORD_TL = $coordTL | COORD_DR = $coordDR | X = $rawX | Y = $rawY | TIMESTAMP : $timestamp")
         }
 
     }
+
+
+
+
+
+
+
+
+
+
+
 
     fun getType() : ViewType
 
@@ -99,36 +148,6 @@ interface SkTools {
         return getViewType(view).toString() + view.id
 
     }
-
-    /*
-    private fun isResourceIdInPackage(context: Context, packageName: String?, resId: Int): Boolean {
-        if (packageName == null || resId == 0) {
-            return false
-        }
-        var res: Resources? = null
-        if (packageName == context.packageName) {
-            res = context.resources
-        } else {
-            try {
-                res = context.packageManager.getResourcesForApplication(packageName)
-            } catch (e: PackageManager.NameNotFoundException) {
-                Log.d("info", packageName + "does not contain " + resId + " ... " + e.message)
-            }
-        }
-        return res?.let { isResourceIdInResources(it, resId) } ?: false
-    }
-
-    private fun isResourceIdInResources(res: Resources, resId: Int): Boolean {
-        return try {
-            res.getResourceName(resId)
-            //Didn't catch so id is in res
-            true
-        } catch (e: NotFoundException) {
-            false
-        }
-    }
-    */
-
 
     private fun getViewType(view: View) : ViewType{
 
