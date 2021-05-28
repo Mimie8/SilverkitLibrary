@@ -27,15 +27,11 @@ class SkInit {
         //if root view is not null and if the activity isn't already saved in shared pref
         if (rv != null && !(firstStart?.contains(activity.localClassName))!!) {
 
-            val childCount: Int = rv.childCount
-            Log.d("info", "ChildCount = $childCount")
-
+            val allChildren : List<View> = getAllChildren(rv)
+            Log.d("info", "allChildren " + allChildren.toString())
 
             //Check for every view in the activity if it's a Sk view, if yes save it in the csv
-            for (i in 0 until childCount) {
-                val v: View = rv.getChildAt(i)
-
-                Log.d("info", "View info : " + v.toString())
+            for (v in allChildren) {
 
                 if (v is SkTools) {
 
@@ -58,6 +54,23 @@ class SkInit {
             editor.putStringSet("activities", hash)
             editor.apply()
         }
+    }
+
+    private fun getAllChildren(v: View): List<View> {
+        if (v !is ViewGroup) {
+            val viewArrayList = ArrayList<View>()
+            viewArrayList.add(v)
+            return viewArrayList
+        }
+        val result = ArrayList<View>()
+        val viewGroup = v
+        for (i in 0 until viewGroup.childCount) {
+            val child = viewGroup.getChildAt(i)
+
+            //Do not add any parents, just add child elements
+            result.addAll(getAllChildren(child))
+        }
+        return result
     }
 
     private fun getViewCoord(view: View): List<List<Int>>{
