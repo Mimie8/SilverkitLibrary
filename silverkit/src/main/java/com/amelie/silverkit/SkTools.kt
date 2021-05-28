@@ -70,7 +70,7 @@ interface SkTools {
             view.id = View.generateViewId()
         }
 
-        return getViewType(view).toString() + view.id
+        return getViewType(view).toString() + "-" + view.id
 
     }
 
