@@ -129,6 +129,8 @@ class SkInit {
         val data:MutableList<List<String>> = readCSVCoordsData(str)
 
         //If the coords aren't saved, saved them
+        Log.d("info", "data : " + data.toString())
+        Log.d("info", "view to save : " + listOf(viewData.viewLocal, viewData.coordTL?.get(0), viewData.coordTL?.get(1), viewData.coordDR?.get(0), viewData.coordDR?.get(1)).toString())
         if(!data.contains(listOf(viewData.viewLocal, viewData.coordTL?.get(0), viewData.coordTL?.get(1), viewData.coordDR?.get(0), viewData.coordDR?.get(1)))){
 
             try {
