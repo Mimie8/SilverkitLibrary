@@ -28,6 +28,8 @@ class SkInit {
         if (rv != null && !(firstStart?.contains(activity.localClassName))!!) {
 
             val childCount: Int = rv.childCount
+            Log.d("info", "ChildCount = $childCount")
+
 
             //Check for every view in the activity if it's a Sk view, if yes save it in the csv
             for (i in 0 until childCount) {
