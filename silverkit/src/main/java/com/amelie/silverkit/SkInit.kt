@@ -64,13 +64,14 @@ class SkInit {
             return viewArrayList
         }
         val result = ArrayList<View>()
-        val viewGroup = v
+        val viewGroup = v as ViewGroup
         for (i in 0 until viewGroup.childCount) {
             val child = viewGroup.getChildAt(i)
 
             Log.d("info", "child : " + child.toString())
 
-            //Do not add any parents, just add child elements
+            //Add parents then detect its child elements
+            result.add(child)
             result.addAll(getAllChildren(child))
         }
         return result
