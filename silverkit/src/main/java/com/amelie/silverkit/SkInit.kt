@@ -24,20 +24,6 @@ class SkInit {
         val rv: ViewGroup? =
             activity.window.decorView.findViewById(android.R.id.content) as ViewGroup?
 
-
-        
-        if(rv == null){
-            Log.d("info", "rv is null")
-        }
-
-        if(!(firstStart?.contains(activity.localClassName))!!){
-            Log.d("info", "prefs does not contain activity : ${activity.localClassName}")
-        }
-
-
-
-
-
         //if root view is not null and if the activity isn't already saved in shared pref
         if (rv != null && !(firstStart?.contains(activity.localClassName))!!) {
 
@@ -47,7 +33,11 @@ class SkInit {
             for (i in 0 until childCount) {
                 val v: View = rv.getChildAt(i)
 
+                Log.d("info", "View info : " + v.toString())
+
                 if (v is SkTools) {
+
+                    Log.d("info", "View is SkTools view")
 
                     val viewID = getViewID(v)
                     val viewLocal = getViewLocal(v)
