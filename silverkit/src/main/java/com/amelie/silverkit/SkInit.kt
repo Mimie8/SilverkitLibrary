@@ -28,7 +28,7 @@ class SkInit {
         if (rv != null && !(firstStart?.contains(activity.localClassName))!!) {
 
             val allChildren : List<View> = getAllChildren(rv)
-            Log.d("info", "allChildren " + allChildren.toString())
+            Log.d("info", "all children : " + allChildren.toString())
 
             //Check for every view in the activity if it's a Sk view, if yes save it in the csv
             for (v in allChildren) {
@@ -60,12 +60,15 @@ class SkInit {
         if (v !is ViewGroup) {
             val viewArrayList = ArrayList<View>()
             viewArrayList.add(v)
+            Log.d("info", "child not vg : " + v.toString())
             return viewArrayList
         }
         val result = ArrayList<View>()
         val viewGroup = v
         for (i in 0 until viewGroup.childCount) {
             val child = viewGroup.getChildAt(i)
+
+            Log.d("info", "child : " + child.toString())
 
             //Do not add any parents, just add child elements
             result.addAll(getAllChildren(child))
