@@ -129,7 +129,7 @@ class SkInit {
         val data:MutableList<List<String>> = readCSVCoordsData(str)
 
         //If the coords aren't saved, saved them
-        if(!data.contains(listOf(viewData.viewID, viewData.viewLocal))){
+        if(!data.contains(listOf(viewData.viewLocal, viewData.coordTL?.get(0), viewData.coordTL?.get(1), viewData.coordDR?.get(0), viewData.coordDR?.get(1)))){
 
             try {
 
@@ -184,9 +184,12 @@ class SkInit {
                 val tokens = line.split(",")
                 if (tokens.isNotEmpty()) {
 
-                    val id = tokens[0]
                     val activity = tokens[1]
-                    data.add(listOf(id,activity))
+                    val coordTLX = tokens[2]
+                    val coordTLY = tokens[3]
+                    val coordDRX = tokens[4]
+                    val coordDRY = tokens[5]
+                    data.add(listOf(activity,coordTLX,coordTLY,coordDRX,coordDRY))
 
                 }
 
