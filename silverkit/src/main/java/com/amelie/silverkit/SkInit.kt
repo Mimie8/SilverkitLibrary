@@ -58,11 +58,9 @@ class SkInit {
 
     private fun getAllChildren(v: View): List<View> {
         if (v !is ViewGroup) {
-            val viewArrayList = ArrayList<View>()
-            viewArrayList.add(v)
-            Log.d("info", "child not vg : " + v.toString())
-            return viewArrayList
+            return ArrayList()
         }
+
         val result = ArrayList<View>()
         val viewGroup = v as ViewGroup
         for (i in 0 until viewGroup.childCount) {
