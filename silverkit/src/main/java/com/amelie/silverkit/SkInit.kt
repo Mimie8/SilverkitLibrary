@@ -17,13 +17,26 @@ import java.io.IOException
 class SkInit {
 
     fun initActivityLayout(activity: Activity) {
-        val prefs: SharedPreferences =
-            activity.baseContext.getSharedPreferences("activities", Context.MODE_PRIVATE)
+        val prefs: SharedPreferences = activity.baseContext.getSharedPreferences("activities", Context.MODE_PRIVATE)
         val firstStart = prefs.getStringSet("FirstStart", HashSet<String>())
         val editor: SharedPreferences.Editor = prefs.edit()
 
         val rv: ViewGroup? =
             activity.window.decorView.findViewById(android.R.id.content) as ViewGroup?
+
+
+        
+        if(rv == null){
+            Log.d("info", "rv is null")
+        }
+
+        if(!(firstStart?.contains(activity.localClassName))!!){
+            Log.d("info", "prefs does not contain activity : ${activity.localClassName}")
+        }
+
+
+
+
 
         //if root view is not null and if the activity isn't already saved in shared pref
         if (rv != null && !(firstStart?.contains(activity.localClassName))!!) {

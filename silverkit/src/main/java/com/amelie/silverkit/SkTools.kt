@@ -61,8 +61,6 @@ interface SkTools {
 
     }
 
-
-
     fun getType() : ViewType
 
     fun getViewID(view: View): String {
