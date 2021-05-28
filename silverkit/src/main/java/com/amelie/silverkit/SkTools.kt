@@ -174,8 +174,7 @@ interface SkTools {
 
             val writer = FileWriter(str, true)
 
-            var csvPrinter:CSVPrinter? = null
-            csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT)
+            val csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT)
 
             csvPrinter.printRecord(touchData.viewID, touchData.viewType, touchData.viewLocal, touchData.rawX, touchData.rawY, touchData.timestamp)
 
@@ -211,8 +210,7 @@ interface SkTools {
 
                 val writer = FileWriter(str, true)
 
-                var csvPrinter:CSVPrinter? = null
-                csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT)
+                val csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT)
 
                 val coordTL = viewData.coordTL
                 val tl_x = coordTL?.get(0)
@@ -311,8 +309,7 @@ interface SkTools {
 
                     val writer = FileWriter(str, true)
 
-                    var csvPrinter:CSVPrinter? = null
-                    csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT)
+                    val csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT)
 
                     val hardwareData = getHardwareData(view)
 
