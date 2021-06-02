@@ -16,20 +16,24 @@ import java.io.IOException
 
 class SkInit {
 
-    fun initActivityLayout(activity: Activity) {
+    fun initViewsCoordinates(activity: Activity) {
+
+        //get the list of activity names in the shared preferences
         val prefs: SharedPreferences = activity.baseContext.getSharedPreferences("activities", Context.MODE_PRIVATE)
         val firstStart = prefs.getStringSet("FirstStart", HashSet<String>())
         val editor: SharedPreferences.Editor = prefs.edit()
 
+        //get the root view
         val rv: ViewGroup? =
             activity.window.decorView.findViewById(android.R.id.content) as ViewGroup?
 
         //if root view is not null and if the activity isn't already saved in shared pref
         if (rv != null && !(firstStart?.contains(activity.localClassName))!!) {
 
+            //get all the views of the root view
             val allChildren : List<View> = getAllChildren(rv)
 
-            //Check for every view in the activity if it's a Sk view, if yes save it in the csv
+            //Check for every view in the activity if it's a Silverkit view, if yes save it in the csv
             for (v in allChildren) {
 
                 if (v is SkTools) {
@@ -45,7 +49,7 @@ class SkInit {
 
             }
 
-            //Save new shared pref by adding the activity
+            //Save new shared prefs by adding the activity name
             val hash = HashSet<String>(firstStart)
             hash.add(activity.localClassName)
             editor.putStringSet("activities", hash)
