@@ -21,39 +21,38 @@ import java.io.IOException
 
 class SkInit {
 
-    //get the shared preferences
-    private var activity: Activity? = null
-    private val prefs: SharedPreferences? = activity?.baseContext?.getSharedPreferences("prefs", Context.MODE_PRIVATE)
-    private val listActivities = prefs?.getStringSet("listActivities", HashSet<String>())
-    private val firstStart = prefs?.getBoolean("firstStart", true)
-    private val editor: SharedPreferences.Editor? = prefs?.edit()
-
     fun init(activity: Activity){
 
-        this.activity = activity
+        initViewsCoordinates(activity)
 
-        initViewsCoordinates()
+        val prefs: SharedPreferences? = activity.baseContext.getSharedPreferences("prefs", Context.MODE_PRIVATE)
+        val firstStart = prefs?.getBoolean("firstStart", true)
+        val editor: SharedPreferences.Editor? = prefs?.edit()
 
         if(firstStart==true){
-            initHardwareInfo()
+            initHardwareInfo(activity)
 
             editor?.putBoolean("firstStart", false)
             editor?.apply()
         }
     }
 
-    private fun initHardwareInfo(){
-        saveHardwareData()
+    private fun initHardwareInfo(activity: Activity){
+        saveHardwareData(activity)
     }
 
-    private fun initViewsCoordinates() {
+    private fun initViewsCoordinates(activity: Activity) {
+
+        val prefs: SharedPreferences? = activity.baseContext.getSharedPreferences("prefs", Context.MODE_PRIVATE)
+        val listActivities = prefs?.getStringSet("listActivities", HashSet<String>())
+        val editor: SharedPreferences.Editor? = prefs?.edit()
 
         //get the root view
         val rv: ViewGroup? =
-            activity?.window?.decorView?.findViewById(android.R.id.content) as ViewGroup?
+            activity.window?.decorView?.findViewById(android.R.id.content) as ViewGroup?
 
         //if root view is not null and if the activity isn't already saved in shared pref
-        if (rv != null && !(listActivities?.contains(activity?.localClassName))!!) {
+        if (rv != null && !(listActivities?.contains(activity.localClassName))!!) {
 
             //get all the views of the root view
             val allChildren : List<View> = getAllChildren(rv)
@@ -76,7 +75,7 @@ class SkInit {
 
             //Save new shared prefs by adding the activity name
             val hash = HashSet<String>(listActivities)
-            activity?.localClassName?.let { hash.add(it) }
+            hash.add(activity.localClassName)
             editor?.putStringSet("listActivities", hash)
             editor?.apply()
         }
@@ -237,12 +236,12 @@ class SkInit {
         return data
     }
 
-    private fun saveHardwareData(){
+    private fun saveHardwareData(activity: Activity){
 
         var fileReader: BufferedReader? = null
 
         //Create CSV if it doesn't exist
-        val path = activity?.baseContext?.getExternalFilesDir(null)?.absolutePath
+        val path = activity.baseContext.getExternalFilesDir(null)?.absolutePath
         val str = "$path/HardwareData.csv"
         FileWriter(str, true)
 
@@ -265,7 +264,7 @@ class SkInit {
 
                     val csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT)
 
-                    val hardwareData = getHardwareData()
+                    val hardwareData = getHardwareData(activity)
 
                     csvPrinter.printRecord(hardwareData.screenWidth, hardwareData.screenHeight)
 
@@ -296,16 +295,14 @@ class SkInit {
         }
     }
 
-    private fun getHardwareData(): SkHardwareData {
+    private fun getHardwareData(activity: Activity): SkHardwareData {
 
         val hardwareData = SkHardwareData()
 
         //Get Screen width and height
-        val screenDimensions = activity?.baseContext?.let { getScreenSizeIncludingTopBottomBar(it) }
-        if (screenDimensions != null) {
-            hardwareData.screenWidth = screenDimensions.get(0)
-            hardwareData.screenHeight = screenDimensions.get(1)
-        }
+        val screenDimensions = getScreenSizeIncludingTopBottomBar(activity.baseContext)
+        hardwareData.screenWidth = screenDimensions[0]
+        hardwareData.screenHeight = screenDimensions[1]
 
         return hardwareData
 
