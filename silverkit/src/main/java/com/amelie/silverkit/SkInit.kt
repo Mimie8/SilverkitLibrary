@@ -1,12 +1,17 @@
 package com.amelie.silverkit
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.SharedPreferences
+import android.content.res.Configuration
+import android.graphics.Point
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import com.amelie.silverkit.datamanager.SkCoordsData
+import com.amelie.silverkit.datamanager.SkHardwareData
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
 import java.io.BufferedReader
@@ -16,19 +21,39 @@ import java.io.IOException
 
 class SkInit {
 
-    fun initViewsCoordinates(activity: Activity) {
+    //get the shared preferences
+    private var activity: Activity? = null
+    private val prefs: SharedPreferences? = activity?.baseContext?.getSharedPreferences("prefs", Context.MODE_PRIVATE)
+    private val listActivities = prefs?.getStringSet("listActivities", HashSet<String>())
+    private val firstStart = prefs?.getBoolean("firstStart", true)
+    private val editor: SharedPreferences.Editor? = prefs?.edit()
+    
+    fun init(activity: Activity){
 
-        //get the list of activity names in the shared preferences
-        val prefs: SharedPreferences = activity.baseContext.getSharedPreferences("activities", Context.MODE_PRIVATE)
-        val firstStart = prefs.getStringSet("FirstStart", HashSet<String>())
-        val editor: SharedPreferences.Editor = prefs.edit()
+        this.activity = activity
+
+        initViewsCoordinates()
+
+        if(firstStart==true){
+            initHardwareInfo()
+
+            editor?.putBoolean("firstStart", false)
+            editor?.apply()
+        }
+    }
+
+    private fun initHardwareInfo(){
+        saveHardwareData()
+    }
+
+    private fun initViewsCoordinates() {
 
         //get the root view
         val rv: ViewGroup? =
-            activity.window.decorView.findViewById(android.R.id.content) as ViewGroup?
+            activity?.window?.decorView?.findViewById(android.R.id.content) as ViewGroup?
 
         //if root view is not null and if the activity isn't already saved in shared pref
-        if (rv != null && !(firstStart?.contains(activity.localClassName))!!) {
+        if (rv != null && !(listActivities?.contains(activity?.localClassName))!!) {
 
             //get all the views of the root view
             val allChildren : List<View> = getAllChildren(rv)
@@ -50,10 +75,10 @@ class SkInit {
             }
 
             //Save new shared prefs by adding the activity name
-            val hash = HashSet<String>(firstStart)
-            hash.add(activity.localClassName)
-            editor.putStringSet("activities", hash)
-            editor.apply()
+            val hash = HashSet<String>(listActivities)
+            activity?.localClassName?.let { hash.add(it) }
+            editor?.putStringSet("listActivities", hash)
+            editor?.apply()
         }
     }
 
@@ -210,6 +235,102 @@ class SkInit {
         }
 
         return data
+    }
+
+    private fun saveHardwareData(){
+
+        var fileReader: BufferedReader? = null
+
+        //Create CSV if it doesn't exist
+        val path = activity?.baseContext?.getExternalFilesDir(null)?.absolutePath
+        val str = "$path/HardwareData.csv"
+        FileWriter(str, true)
+
+        try {
+
+            var line: String?
+
+            fileReader = BufferedReader(FileReader(str))
+
+            // Read CSV first line
+            line = fileReader.readLine()
+
+            // if there's not even a line in the file, write in it the hardware info
+            if (line == null) {
+
+                //Data needs to be saved
+                try {
+
+                    val writer = FileWriter(str, true)
+
+                    val csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT)
+
+                    val hardwareData = getHardwareData()
+
+                    csvPrinter.printRecord(hardwareData.screenWidth, hardwareData.screenHeight)
+
+                    csvPrinter.flush()
+                    csvPrinter.close()
+
+                    println("Write hardware data in CSV successfully!")
+
+                } catch (e: Exception) {
+
+                    println("Writing hardware data in CSV error!")
+                    e.printStackTrace()
+
+                }
+
+            }
+
+        } catch (e: Exception) {
+            println("Reading HardwareData CSV Error!")
+            e.printStackTrace()
+        } finally {
+            try {
+                fileReader!!.close()
+            } catch (e: IOException) {
+                println("Closing HardwareData CSV fileReader Error!")
+                e.printStackTrace()
+            }
+        }
+    }
+
+    private fun getHardwareData(): SkHardwareData {
+
+        val hardwareData = SkHardwareData()
+
+        //Get Screen width and height
+        val screenDimensions = activity?.baseContext?.let { getScreenSizeIncludingTopBottomBar(it) }
+        if (screenDimensions != null) {
+            hardwareData.screenWidth = screenDimensions.get(0)
+            hardwareData.screenHeight = screenDimensions.get(1)
+        }
+
+        return hardwareData
+
+    }
+
+    @SuppressLint("ServiceCast")
+    private fun getScreenSizeIncludingTopBottomBar(context: Context): IntArray {
+        val screenDimensions = IntArray(2) // width[0], height[1]
+        val x: Int
+        val y: Int
+        val orientation = context.resources.configuration.orientation
+        val wm = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+        val display = wm.defaultDisplay
+        val screenSize = Point()
+        display.getRealSize(screenSize)
+        x = screenSize.x
+        y = screenSize.y
+        screenDimensions[0] = if (orientation == Configuration.ORIENTATION_PORTRAIT) x else y // width
+        screenDimensions[1] = if (orientation == Configuration.ORIENTATION_PORTRAIT) y else x // height
+
+
+        Log.d("info","getScreenSizeIncludingTopBottomBar : width ${screenDimensions[0]} height : ${screenDimensions[1]}")
+
+
+        return screenDimensions
     }
 
 }
