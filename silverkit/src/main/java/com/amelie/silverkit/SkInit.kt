@@ -27,7 +27,7 @@ class SkInit {
     private val listActivities = prefs?.getStringSet("listActivities", HashSet<String>())
     private val firstStart = prefs?.getBoolean("firstStart", true)
     private val editor: SharedPreferences.Editor? = prefs?.edit()
-    
+
     fun init(activity: Activity){
 
         this.activity = activity

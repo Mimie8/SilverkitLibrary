@@ -53,9 +53,6 @@ interface SkTools {
             //Save touch data in CSV file
             saveClicks(view, touchData)
 
-            //Save hardware info in CSV file if the info isn't already saved
-            saveHardwareData(view)
-
             Log.d("info", "SILVERKIT TOOL ONTOUCH : ID = $viewID | VIEW = $viewType |LOCAL = $viewLocal | X = $rawX | Y = $rawY | TIMESTAMP : $timestamp")
         }
 
