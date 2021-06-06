@@ -29,6 +29,8 @@ class SkInit {
         val firstStart = prefs?.getBoolean("firstStart", true)
         val editor: SharedPreferences.Editor? = prefs?.edit()
 
+        Log.d("info", "SharedPreferences firstStart : $firstStart ")
+
         if(firstStart==true){
             initHardwareInfo(activity)
 
@@ -78,6 +80,8 @@ class SkInit {
             hash.add(activity.localClassName)
             editor?.putStringSet("listActivities", hash)
             editor?.apply()
+
+            Log.d("info", "SharedPreferences get specialized views of : ${activity.localClassName} ")
         }
     }
 
