@@ -51,9 +51,9 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
     // It is called if the db version number changes. It prevents previous users apps from breaking when you change the db design
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
 
-        db.execSQL("DROP TABLE $T_CLICK_EVENTS")
-        db.execSQL("DROP TABLE $T_VIEW_DATA")
-        db.execSQL("DROP TABLE $T_DEVICE_DATA")
+        db.execSQL("DROP TABLE IF EXISTS $T_CLICK_EVENTS")
+        db.execSQL("DROP TABLE IF EXISTS $T_VIEW_DATA")
+        db.execSQL("DROP TABLE IF EXISTS $T_DEVICE_DATA")
 
         onCreate(db)
     }
@@ -139,6 +139,9 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
 
     // Check if data already in DB or not
     private fun isDataAlreadyInDB(table_name : String, field_name: String, field_value: String?) : Boolean{
+
+        Log.d("info", "DATABASE SK CHECK DATA EXISTS : $table_name, $field_name = $field_value ?")
+
         val db = this.readableDatabase
         val query = "SELECT * FROM $table_name WHERE $field_name = $field_value"
         val cursor = db.rawQuery(query, null)
