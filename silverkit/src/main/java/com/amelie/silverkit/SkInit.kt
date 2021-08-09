@@ -18,6 +18,9 @@ import java.io.BufferedReader
 import java.io.FileReader
 import java.io.FileWriter
 import java.io.IOException
+import java.sql.Timestamp
+import java.time.Instant
+import java.time.format.DateTimeFormatter
 
 class SkInit {
 
@@ -145,6 +148,7 @@ class SkInit {
         return view.context.javaClass.simpleName
     }
 
+    /*
     private fun saveCoordinates(view:View, viewData: SkCoordsData){
 
         //Create CSV if it doesn't exist
@@ -192,7 +196,9 @@ class SkInit {
 
 
     }
+    */
 
+    /*
     private fun readCSVCoordsData(path: String): MutableList<List<String>>{
 
         val data:MutableList<List<String>> = mutableListOf()
@@ -239,7 +245,18 @@ class SkInit {
 
         return data
     }
+    */
 
+    private fun saveCoordinates(view: View, viewData: SkCoordsData){
+
+        val context = view.context
+
+        val dbHelper =  DatabaseHelper(context)
+        dbHelper.addViewData(viewData)
+
+    }
+
+    /*
     private fun saveHardwareData(activity: Activity){
 
         var fileReader: BufferedReader? = null
@@ -297,6 +314,19 @@ class SkInit {
                 e.printStackTrace()
             }
         }
+    }
+    */
+
+    private fun saveHardwareData(activity: Activity){
+
+        val hardwareData = getHardwareData(activity)
+
+        val context = activity.baseContext
+
+        val dbHelper =  DatabaseHelper(context)
+        val time = Timestamp(System.currentTimeMillis())
+        dbHelper.addDeviceData(hardwareData.screenWidth, hardwareData.screenHeight, time.toString())
+
     }
 
     private fun getHardwareData(activity: Activity): SkHardwareData {

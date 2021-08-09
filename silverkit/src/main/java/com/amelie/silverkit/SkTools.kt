@@ -76,7 +76,7 @@ interface SkTools {
         return view.context.javaClass.simpleName
     }
 
-    /**
+    /*
     @RequiresApi(Build.VERSION_CODES.O)
     private fun saveClicks(view: View, touchData: SkClicksData){
 
@@ -105,16 +105,14 @@ interface SkTools {
 
 
     }
-    **/
+    */
 
     private fun saveClicks(view: View, clickData: SkClicksData){
 
         val context = view.context
 
         val db_helper =  DatabaseHelper(context)
-
-        val result = db_helper.addClickEvent(clickData)
-        Toast.makeText(context, "Click save = $result", Toast.LENGTH_SHORT).show()
+        db_helper.addClickEvent(clickData)
 
     }
 
