@@ -140,10 +140,8 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
     // Check if data already in DB or not
     private fun isDataAlreadyInDB(table_name : String, field_name: String, field_value: String?) : Boolean{
 
-        Log.d("info", "DATABASE SK CHECK DATA EXISTS : $table_name, $field_name = $field_value ?")
-
         val db = this.readableDatabase
-        val query = "SELECT * FROM $table_name WHERE $field_name = $field_value"
+        val query = "SELECT * FROM $table_name WHERE $field_name = \"$field_value\" "
         val cursor = db.rawQuery(query, null)
         if (cursor.count <= 0) {
             cursor.close()
