@@ -74,7 +74,7 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
 
         val result = db.insert(T_CLICK_EVENTS, null, cv)
 
-        return if(result == 1L){
+        return if(result == -1L){
             Log.d("info", "DATABASE SK : ERROR WHILE SAVING THE CLICK DATA")
             false
         } else {
@@ -85,6 +85,8 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
 
     // Add view data to db
     fun addViewData(view_data: SkCoordsData) : Boolean{
+
+
 
         // Check if view data is already saved before saving
         if(!isDataAlreadyInDB(T_VIEW_DATA, C_VIEW_ID, view_data.viewID)){
@@ -101,8 +103,9 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
 
             val result = db.insert(T_VIEW_DATA, null, cv)
 
-            return if(result == 1L){
+            return if(result == -1L){
                 Log.d("info", "DATABASE SK : ERROR WHILE SAVING THE VIEW DATA")
+                Log.d("info", "DATABASE SK : ${view_data.toString()}")
                 false
             } else {
                 Log.d("info", "DATABASE SK : SUCCESSFULLY SAVE THE CLICK DATA")
@@ -127,8 +130,9 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
 
         val result = db.insert(T_DEVICE_DATA, null, cv)
 
-        return if(result == 1L){
+        return if(result == -1L){
             Log.d("info", "DATABASE SK : ERROR WHILE SAVING THE DEVICE DATA")
+            Log.d("info", "DATABASE SK : $screen_width, $screen_height, $last_corrections")
             false
         } else {
             Log.d("info", "DATABASE SK : SUCCESSFULLY SAVE THE DEVICE DATA")
