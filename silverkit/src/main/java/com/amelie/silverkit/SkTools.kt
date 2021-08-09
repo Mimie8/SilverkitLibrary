@@ -1,25 +1,15 @@
 package com.amelie.silverkit
 
-import android.annotation.SuppressLint
-import android.app.Activity
-import android.content.Context
-import android.content.SharedPreferences
-import android.content.res.Configuration
-import android.graphics.Point
 import android.os.Build
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
-import android.view.ViewGroup
-import android.view.WindowManager
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import com.amelie.silverkit.datamanager.*
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
-import java.io.BufferedReader
-import java.io.FileReader
 import java.io.FileWriter
-import java.io.IOException
 import java.sql.Timestamp
 
 
@@ -48,10 +38,10 @@ interface SkTools {
             val rawY = event.rawY.toInt()
             val timestamp = Timestamp(System.currentTimeMillis())
 
-            val touchData = SkClicksData(viewID, viewType, viewLocal, rawX, rawY, timestamp)
+            val clickData = SkClicksData(viewID, viewType, viewLocal, rawX, rawY, timestamp)
 
-            //Save touch data in CSV file
-            saveClicks(view, touchData)
+            //Save click data in CSV file
+            saveClicks(view, clickData)
 
             Log.d("info", "SILVERKIT TOOL ONTOUCH : ID = $viewID | VIEW = $viewType |LOCAL = $viewLocal | X = $rawX | Y = $rawY | TIMESTAMP : $timestamp")
         }
@@ -86,6 +76,7 @@ interface SkTools {
         return view.context.javaClass.simpleName
     }
 
+    /**
     @RequiresApi(Build.VERSION_CODES.O)
     private fun saveClicks(view: View, touchData: SkClicksData){
 
@@ -112,6 +103,18 @@ interface SkTools {
 
         }
 
+
+    }
+    **/
+
+    private fun saveClicks(view: View, clickData: SkClicksData){
+
+        val context = view.context
+
+        val db_helper =  DatabaseHelper(context)
+
+        val result = db_helper.addClickEvent(clickData)
+        Toast.makeText(context, "Click save = $result", Toast.LENGTH_SHORT).show()
 
     }
 
