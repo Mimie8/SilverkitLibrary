@@ -32,11 +32,11 @@ interface SkTools {
             //PRESS ON THE VIEW
 
             val viewID = getViewID(view)
-            val viewType = getViewType(view)
+            val viewType = getViewType(view).toString()
             val viewLocal = getViewLocal(view)
             val rawX = event.rawX.toInt()
             val rawY = event.rawY.toInt()
-            val timestamp = Timestamp(System.currentTimeMillis())
+            val timestamp = Timestamp(System.currentTimeMillis()).toString()
 
             val clickData = SkClicksData(viewID, viewType, viewLocal, rawX, rawY, timestamp)
 

@@ -6,14 +6,14 @@ import java.sql.Timestamp
 class SkClicksData {
 
     var viewID : String? = null
-    var viewType : SkTools.ViewType? = null
+    var viewType : String? = null
     var viewLocal : String? = null
     var rawX: Int = 0
     var rawY: Int = 0
-    var timestamp : Timestamp? = null
+    var timestamp : String? = null
 
     constructor()
-    constructor(viewID: String, viewType: SkTools.ViewType, viewLocal: String, rawX: Int, rawY: Int, timestamp: Timestamp){
+    constructor(viewID: String, viewType: String, viewLocal: String, rawX: Int, rawY: Int, timestamp: String){
         this.viewID = viewID
         this.viewType = viewType
         this.viewLocal = viewLocal
