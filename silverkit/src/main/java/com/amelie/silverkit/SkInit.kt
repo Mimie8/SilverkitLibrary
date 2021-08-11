@@ -120,6 +120,10 @@ class SkInit {
             pointsDistance.add(distance)
         }
 
+        if(pointsDistance.isEmpty()){
+            pointsDistance.add(0f)
+        }
+
         val result : Float = pointsDistance.sum() / pointsDistance.size.toFloat()
 
         Log.d("info", "getAverageDistanceFromBorder : $result ")
