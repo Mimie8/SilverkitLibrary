@@ -253,7 +253,10 @@ class SkInit {
             val x = click.rawX
             val y = click.rawY
 
-            if( (tl_x - maxDistance <= x) && (tl_y - maxDistance <= y) and (x <= dr_x + maxDistance) and (y <= dr_y + maxDistance)){
+            val inDistance = (tl_x - maxDistance <= x) && (tl_y - maxDistance <= y) and (x <= dr_x + maxDistance) and (y <= dr_y + maxDistance)
+            val inView = (tl_x < x) && (tl_y < y) && (x < dr_x) && (y < dr_y)
+
+            if( inDistance && !inView){
                 clicksAroundView.add(click)
             }
 
