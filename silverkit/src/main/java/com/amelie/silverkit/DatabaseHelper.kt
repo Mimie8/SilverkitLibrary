@@ -233,7 +233,7 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
         val query = "SELECT $C_ANALYSIS_DATA_ID FROM $T_ANALYSIS_DATA WHERE $C_VIEW_ID = \"$viewID\" AND $C_VIEW_ACTIVTY = \"$activity\" "
         val cursor = db.rawQuery(query, null)
         return if(cursor.moveToFirst()){
-            val id = cursor.getInt(1)
+            val id = cursor.getInt(0)
             cursor.close()
             id
         } else {
@@ -259,12 +259,12 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
             if (cursor != null) {
                 if (cursor.count > 0) {
                     while (cursor.moveToNext()) {
-                        val viewID = cursor.getString(2)
-                        val viewType = cursor.getString(3)
-                        val viewActivity = cursor.getString(4)
-                        val x = cursor.getInt(5)
-                        val y = cursor.getInt(6)
-                        val timestamp = cursor.getString(7)
+                        val viewID = cursor.getString(1)
+                        val viewType = cursor.getString(2)
+                        val viewActivity = cursor.getString(3)
+                        val x = cursor.getInt(4)
+                        val y = cursor.getInt(5)
+                        val timestamp = cursor.getString(6)
 
                         val data = SkClicksData(viewID, viewType, viewActivity, x, y, timestamp)
                         clicksData.add(data)
@@ -290,12 +290,12 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
                 if (cursor.count > 0) {
                     cursor.move(0)
                     while (cursor.moveToNext()) {
-                        val viewID = cursor.getString(2)
-                        val viewActivity = cursor.getString(3)
-                        val tl_x = cursor.getInt(4)
-                        val tl_y = cursor.getInt(5)
-                        val dr_x = cursor.getInt(6)
-                        val dr_y = cursor.getInt(7)
+                        val viewID = cursor.getString(1)
+                        val viewActivity = cursor.getString(2)
+                        val tl_x = cursor.getInt(3)
+                        val tl_y = cursor.getInt(4)
+                        val dr_x = cursor.getInt(5)
+                        val dr_y = cursor.getInt(6)
 
                         val data = SkCoordsData(viewID, viewActivity, listOf(tl_x, tl_y), listOf(dr_x, dr_y))
                         viewsData.add(data)
