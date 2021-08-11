@@ -40,8 +40,6 @@ class SkInit {
     }
 
 
-
-    /*
     fun applyCorrections(activity: Activity){
 
         val context = activity.baseContext
@@ -305,7 +303,7 @@ class SkInit {
 
         return skViewsID
     }
-    */
+
 
 
 
