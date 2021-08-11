@@ -331,10 +331,7 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
     }
 
     private fun roundTo2Decimal(d: Float): Float {
-        val decimalPlace = 2
-        var bd = BigDecimal(java.lang.Float.toString(d))
-        bd = bd.setScale(decimalPlace, BigDecimal.ROUND_HALF_UP)
-        return bd.toFloat()
+        return (((d + 0.005f) * 100).toInt()) / 100f
     }
 
 }
