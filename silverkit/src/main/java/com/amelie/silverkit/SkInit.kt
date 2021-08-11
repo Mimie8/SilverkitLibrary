@@ -104,6 +104,7 @@ class SkInit {
 
         val result = missClicks.toFloat().div(totalClicks.toFloat())
 
+        Log.d("info", "getErrorRatio : $result ")
         return roundTo2Decimal(result)
     }
 
@@ -121,6 +122,7 @@ class SkInit {
 
         val result : Float = pointsDistance.sum() / pointsDistance.size.toFloat()
 
+        Log.d("info", "getAverageDistanceFromBorder : $result ")
         return roundTo2Decimal(result)
 
     }
@@ -172,6 +174,7 @@ class SkInit {
 
         val result : Float = num / den
 
+        Log.d("info", "getDistanceFromView : $result ")
         return roundTo2Decimal(result)
 
     }
@@ -198,6 +201,7 @@ class SkInit {
 
         val result = sqrt(((centerOfView[0] - gravityX).pow(2) - (centerOfView[1] - gravityY).pow(2)).absoluteValue)
 
+        Log.d("info", "getDistGravityCenter : $result ")
         return roundTo2Decimal(result)
     }
 
