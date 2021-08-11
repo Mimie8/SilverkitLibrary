@@ -51,31 +51,51 @@ class SkInit {
         // Look if it's time to analyse
         if(dbHelper.isAnalysisTime()){
 
-            // Get data from DB
-            val clicks = dbHelper.getClicksData()
-            val views = dbHelper.getViewsData()
-            val deviceData = dbHelper.getDeviceData()
+            // Analyse data and save to bd
+            analyseData(dbHelper, activity)
 
-            if(clicks.isNotEmpty() && views.isNotEmpty()){
-                // Analyse data from all the views in this activity and save to table in DB
-                val skViewsID = getSkViewsID(activity)
-                for (viewID in skViewsID){
-                    val analysisData = analyseData(viewID, activity.localClassName, clicks, views, deviceData)
-                    if(analysisData != null){
-                        dbHelper.addAnalysisData(analysisData)
-                    }
-                }
-            }
-
-            // Get data from table and see if it's necessary to apply tactics
-            // Apply tactics
+            // Apply tactics if necessary
+            applyTactics(dbHelper, activity)
         }
     }
 
+    // -------------------- TACTICS
+    private fun applyTactics(dbHelper : DatabaseHelper, activity: Activity){
 
-    // -------------------- CORRECTIONS
+        // Get data from table and see if it's necessary to apply tactics, if yes apply tactics
+        val analysisDataOfActivity = dbHelper.getAnalysisData(activity.localClassName)
+        Log.d("info", "Analysis Data : $analysisDataOfActivity ")
 
-    private fun analyseData(viewID : String, activity: String, clicksData : MutableList<SkClicksData>, viewsData : MutableList<SkCoordsData>, deviceData : List<Any>) : SkAnalysisData?{
+        //applyColorContrastTactic(analysisDataOfActivity)
+        //applySizeTactic(analysisDataOfActivity)
+        //applyGravityCenterTactic(analysisDataOfActivity)
+    }
+
+
+    // -------------------- ANALYSE DATA
+    private fun analyseData(dbHelper : DatabaseHelper, activity: Activity){
+
+        // Get data from DB
+        val clicks = dbHelper.getClicksData()
+        val views = dbHelper.getViewsData()
+        val deviceData = dbHelper.getDeviceData()
+
+        if(clicks.isNotEmpty() && views.isNotEmpty()){
+
+            // Analyse data from all the views in this activity and save to table in DB
+            val skViewsID = getSkViewsID(activity)
+            for (viewID in skViewsID){
+                val analysisData = analyseViewData(viewID, activity.localClassName, clicks, views, deviceData)
+                if(analysisData != null){
+                    dbHelper.addAnalysisData(analysisData)
+                }
+            }
+
+
+        }
+    }
+
+    private fun analyseViewData(viewID : String, activity: String, clicksData : MutableList<SkClicksData>, viewsData : MutableList<SkCoordsData>, deviceData : List<Any>) : SkAnalysisData?{
 
         val viewDelimitations = viewDelimitations(viewID, activity, viewsData)
         val maxDistance = getMaxDistance(deviceData)

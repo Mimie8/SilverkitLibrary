@@ -288,7 +288,6 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
             val cursor = db.rawQuery(query, null)
             if (cursor != null) {
                 if (cursor.count > 0) {
-                    cursor.move(0)
                     while (cursor.moveToNext()) {
                         val viewID = cursor.getString(1)
                         val viewActivity = cursor.getString(2)
@@ -327,6 +326,35 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
             }
         } catch (e: Exception){
             listOf()
+        }
+    }
+
+    fun getAnalysisData(activity: String):List<SkAnalysisData>{
+        val db = this.readableDatabase
+        val query = "SELECT * FROM $T_ANALYSIS_DATA WHERE $C_VIEW_ACTIVTY = \'$activity\'"
+
+        val analysisData = mutableListOf<SkAnalysisData>()
+
+        try{
+            val cursor = db.rawQuery(query, null)
+            if (cursor != null) {
+                if (cursor.count > 0) {
+                    while (cursor.moveToNext()) {
+                        val viewID = cursor.getString(1)
+                        val viewActivity = cursor.getString(2)
+                        val errorRatio = cursor.getString(3)
+                        val averageDistFromBorder = cursor.getString(4)
+                        val distGravityCenter = cursor.getString(5)
+
+                        val data = SkAnalysisData(viewID, viewActivity, errorRatio.toFloat(), averageDistFromBorder.toFloat(), distGravityCenter.toFloat())
+                        analysisData.add(data)
+                    }
+                }
+                cursor.close() // close your cursor when you don't need it anymore
+            }
+            return analysisData
+        } catch (e: Exception){
+            return mutableListOf()
         }
     }
 
