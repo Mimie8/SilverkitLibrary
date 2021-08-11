@@ -11,6 +11,7 @@ import com.amelie.silverkit.datamanager.SkCoordsData
 import com.amelie.silverkit.datamanager.SkHardwareData
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.text.DecimalFormat
 
 
 class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase", null, 1) {
@@ -333,7 +334,10 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
     }
 
     private fun roundTo2Decimal(nbr : Float) : Float{
-        return BigDecimal(nbr.toDouble()).setScale(2, RoundingMode.HALF_EVEN).toFloat()
+        val df = DecimalFormat("#.##")
+        df.roundingMode = RoundingMode.HALF_EVEN
+
+        return df.format(nbr).toFloat()
     }
 
 }
