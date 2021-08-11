@@ -258,7 +258,6 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
             val cursor = db.rawQuery(query, null)
             if (cursor != null) {
                 if (cursor.count > 0) {
-                    cursor.move(0)
                     while (cursor.moveToNext()) {
                         val viewID = cursor.getString(2)
                         val viewType = cursor.getString(3)
