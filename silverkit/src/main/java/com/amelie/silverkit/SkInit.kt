@@ -102,10 +102,7 @@ class SkInit {
         val missClicks = clicksAroundView.size
         val totalClicks = clicksOnView.size + missClicks
 
-        val result = missClicks.toFloat().div(totalClicks.toFloat())
-
-        Log.d("info", "getErrorRatio : $result ")
-        return roundTo2Decimal(result)
+        return missClicks.toFloat().div(totalClicks.toFloat())
     }
 
     private fun getAverageDistanceFromBorder(viewDelimitations : List<Int>, clicksAroundView : MutableList<SkClicksData>) : Float{
@@ -127,7 +124,7 @@ class SkInit {
         val result : Float = pointsDistance.sum() / pointsDistance.size.toFloat()
 
         Log.d("info", "getAverageDistanceFromBorder : $result ")
-        return roundTo2Decimal(result)
+        return result
 
     }
 
@@ -176,10 +173,7 @@ class SkInit {
 
         val den : Float = sqrt( (x2 - x1).pow(2) + (y2 - y1).pow(2) )
 
-        val result : Float = num / den
-
-        Log.d("info", "getDistanceFromView : $result ")
-        return roundTo2Decimal(result)
+        return num / den
 
     }
 
@@ -206,7 +200,7 @@ class SkInit {
         val result = sqrt(((centerOfView[0] - gravityX).pow(2) - (centerOfView[1] - gravityY).pow(2)).absoluteValue)
 
         Log.d("info", "getDistGravityCenter : $result ")
-        return roundTo2Decimal(result)
+        return result
     }
 
     private fun viewDelimitations(viewID: String, activity: String, viewsData: MutableList<SkCoordsData>) : List<Int>{
@@ -325,10 +319,6 @@ class SkInit {
         }
 
         return skViewsID
-    }
-
-    private fun roundTo2Decimal(nbr : Float) : Float{
-        return BigDecimal(nbr.toDouble()).setScale(2, RoundingMode.HALF_EVEN).toFloat()
     }
 
 

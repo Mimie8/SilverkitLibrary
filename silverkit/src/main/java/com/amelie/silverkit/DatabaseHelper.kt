@@ -9,6 +9,8 @@ import com.amelie.silverkit.datamanager.SkAnalysisData
 import com.amelie.silverkit.datamanager.SkClicksData
 import com.amelie.silverkit.datamanager.SkCoordsData
 import com.amelie.silverkit.datamanager.SkHardwareData
+import java.math.BigDecimal
+import java.math.RoundingMode
 
 
 class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase", null, 1) {
@@ -184,9 +186,9 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
 
         val db = this.writableDatabase
         val cv = ContentValues()
-        cv.put(C_ERROR_RATIO, analysisData.errorRatio)
-        cv.put(C_AVERAGE_DIST_FROM_BORDER, analysisData.averageDistFromBorder)
-        cv.put(C_DIST_GRAVITY_CENTER, analysisData.distGravityCenter)
+        cv.put(C_ERROR_RATIO, roundTo2Decimal(analysisData.errorRatio))
+        cv.put(C_AVERAGE_DIST_FROM_BORDER, roundTo2Decimal(analysisData.averageDistFromBorder))
+        cv.put(C_DIST_GRAVITY_CENTER, roundTo2Decimal(analysisData.distGravityCenter))
 
         val where = "id=?"
         val whereArgs = arrayOf(java.lang.String.valueOf(id))
@@ -207,9 +209,9 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
 
         cv.put(C_VIEW_ID, analysisData.viewID)
         cv.put(C_VIEW_ACTIVTY, analysisData.viewLocal)
-        cv.put(C_ERROR_RATIO, analysisData.errorRatio)
-        cv.put(C_AVERAGE_DIST_FROM_BORDER, analysisData.averageDistFromBorder)
-        cv.put(C_DIST_GRAVITY_CENTER, analysisData.distGravityCenter)
+        cv.put(C_ERROR_RATIO, roundTo2Decimal(analysisData.errorRatio))
+        cv.put(C_AVERAGE_DIST_FROM_BORDER, roundTo2Decimal(analysisData.averageDistFromBorder))
+        cv.put(C_DIST_GRAVITY_CENTER, roundTo2Decimal(analysisData.distGravityCenter))
 
         val result = db.insert(T_ANALYSIS_DATA, null, cv)
 
@@ -328,6 +330,10 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
         } catch (e: Exception){
             listOf()
         }
+    }
+
+    private fun roundTo2Decimal(nbr : Float) : Float{
+        return BigDecimal(nbr.toDouble()).setScale(2, RoundingMode.HALF_EVEN).toFloat()
     }
 
 }

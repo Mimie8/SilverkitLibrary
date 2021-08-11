@@ -7,9 +7,9 @@ class SkAnalysisData {
 
     var viewID : String = ""
     var viewLocal : String = ""
-    var errorRatio : Float = 0f
-    var averageDistFromBorder : Float = 0f
-    var distGravityCenter : Float = 0f
+    var errorRatio : Float = 0.0f
+    var averageDistFromBorder : Float = 0.0f
+    var distGravityCenter : Float = 0.0f
 
     constructor()
     constructor(viewID: String, viewLocal: String, errorRatio: Float, averageDistFromBorder: Float, distGravityCenter: Float){
