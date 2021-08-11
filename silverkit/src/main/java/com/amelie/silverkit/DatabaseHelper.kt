@@ -8,10 +8,7 @@ import android.util.Log
 import com.amelie.silverkit.datamanager.SkAnalysisData
 import com.amelie.silverkit.datamanager.SkClicksData
 import com.amelie.silverkit.datamanager.SkCoordsData
-import com.amelie.silverkit.datamanager.SkHardwareData
 import java.math.BigDecimal
-import java.math.RoundingMode
-import java.text.DecimalFormat
 
 
 class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase", null, 1) {
@@ -333,11 +330,11 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
         }
     }
 
-    private fun roundTo2Decimal(nbr : Float) : Float{
-        val df = DecimalFormat("#.##")
-        df.roundingMode = RoundingMode.HALF_EVEN
-
-        return df.format(nbr).toFloat()
+    private fun roundTo2Decimal(d: Float): Float {
+        val decimalPlace = 2
+        var bd = BigDecimal(java.lang.Float.toString(d))
+        bd = bd.setScale(decimalPlace, BigDecimal.ROUND_HALF_EVEN)
+        return bd.toFloat()
     }
 
 }
