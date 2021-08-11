@@ -57,7 +57,7 @@ class SkInit {
                 // Analyse data from all the views in this activity and save to table in DB
                 val skViewsID = getSkViewsID(activity)
                 for (viewID in skViewsID){
-                    val analysisData = analyseData(viewID, activity.toString(), clicks, views, deviceData)
+                    val analysisData = analyseData(viewID, activity.localClassName, clicks, views, deviceData)
                     if(analysisData != null){
                         dbHelper.addAnalysisData(analysisData)
                     }
