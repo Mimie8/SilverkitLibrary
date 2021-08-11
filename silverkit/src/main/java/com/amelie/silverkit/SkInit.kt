@@ -81,6 +81,7 @@ class SkInit {
         // Get color of view
         val viewID = viewAnalysisData.viewID
         val resourceID = getResId(viewID, R.layout::class.java)
+        Log.d("info", " applyColorContrastTactic ID : $resourceID ")
         val view = activity.window?.decorView?.findViewById(resourceID) as View
         val viewColor = getViewColor(view)
 
