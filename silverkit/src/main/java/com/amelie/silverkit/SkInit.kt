@@ -41,7 +41,7 @@ class SkInit {
 
 
 
-
+    /*
     fun applyCorrections(activity: Activity){
 
         val context = activity.baseContext
@@ -305,6 +305,7 @@ class SkInit {
 
         return skViewsID
     }
+    */
 
 
 
@@ -357,7 +358,7 @@ class SkInit {
         }
     }
 
-    private fun getAllChildren(v: View): List<View> {
+     fun getAllChildren(v: View): List<View> {
         if (v !is ViewGroup) {
             return ArrayList()
         }
