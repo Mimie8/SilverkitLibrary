@@ -14,6 +14,8 @@ import com.amelie.silverkit.datamanager.SkAnalysisData
 import com.amelie.silverkit.datamanager.SkClicksData
 import com.amelie.silverkit.datamanager.SkCoordsData
 import com.amelie.silverkit.datamanager.SkHardwareData
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.sql.Timestamp
 import kotlin.math.absoluteValue
 import kotlin.math.pow
@@ -100,7 +102,9 @@ class SkInit {
         val missClicks = clicksAroundView.size
         val totalClicks = clicksOnView.size + missClicks
 
-        return missClicks.toFloat().div(totalClicks.toFloat())
+        val result = missClicks.toFloat().div(totalClicks.toFloat())
+
+        return roundTo2Decimal(result)
     }
 
     private fun getAverageDistanceFromBorder(viewDelimitations : List<Int>, clicksAroundView : MutableList<SkClicksData>) : Float{
@@ -115,7 +119,10 @@ class SkInit {
             pointsDistance.add(distance)
         }
 
-        return pointsDistance.sum() / pointsDistance.size
+        val result : Float = pointsDistance.sum() / pointsDistance.size.toFloat()
+
+        return roundTo2Decimal(result)
+
     }
 
     private fun getDistanceFromView(x:Int, y:Int, viewDelimitations: List<Int>) : Float{
@@ -165,7 +172,7 @@ class SkInit {
 
         val result : Float = num / den
 
-        return round((result) * 100) / 100
+        return roundTo2Decimal(result)
 
     }
 
@@ -189,9 +196,9 @@ class SkInit {
         val gravityX : Float = total_x.sum().toFloat().div(total_x.size.toFloat())
         val gravityY : Float = total_y.sum().toFloat().div(total_y.size.toFloat())
 
-        val result =sqrt(((centerOfView[0] - gravityX).pow(2) - (centerOfView[1] - gravityY).pow(2)).absoluteValue)
+        val result = sqrt(((centerOfView[0] - gravityX).pow(2) - (centerOfView[1] - gravityY).pow(2)).absoluteValue)
 
-        return round((result) * 100) / 100
+        return roundTo2Decimal(result)
     }
 
     private fun viewDelimitations(viewID: String, activity: String, viewsData: MutableList<SkCoordsData>) : List<Int>{
@@ -312,7 +319,9 @@ class SkInit {
         return skViewsID
     }
 
-
+    private fun roundTo2Decimal(nbr : Float) : Float{
+        return BigDecimal(nbr.toDouble()).setScale(2, RoundingMode.HALF_EVEN).toFloat()
+    }
 
 
     // -------------------- INIT
