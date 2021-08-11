@@ -158,11 +158,11 @@ class SkInit {
         val y2 = P2[1]
 
         // distance(x,y,x1,y1,x2,y2) = |(x2 - x1)(y1 - y) - (x1 - x)(y2 - y1)|   /    sqrt( (x2 - x1)² + (y2 - y1)² )
-        val num : Float = ( ((x2-x1) * (y1-y)) - ((x1 - x) * (y2 - y1))).absoluteValue
+        val num : Float = ( ((x2-x1) * (y1-y.toFloat())) - ((x1 - x.toFloat()) * (y2 - y1))).absoluteValue
 
-        val den = sqrt( (x2 - x1).pow(2) + (y2 - y1).pow(2) )
+        val den : Float = sqrt( (x2 - x1).pow(2) + (y2 - y1).pow(2) )
 
-        return num / den
+        return "%.2f".format(num / den).toFloat()
 
     }
 
@@ -186,7 +186,9 @@ class SkInit {
         val gravityX : Float = total_x.sum().toFloat().div(total_x.size.toFloat())
         val gravityY : Float = total_y.sum().toFloat().div(total_y.size.toFloat())
 
-        return sqrt(((centerOfView[0] - gravityX).pow(2) - (centerOfView[1] - gravityY).pow(2)).absoluteValue)
+        val result =sqrt(((centerOfView[0] - gravityX).pow(2) - (centerOfView[1] - gravityY).pow(2)).absoluteValue)
+
+        return "%.2f".format(result).toFloat()
     }
 
     private fun viewDelimitations(viewID: String, activity: String, viewsData: MutableList<SkCoordsData>) : List<Int>{
