@@ -672,9 +672,9 @@ class SkInit {
         // view doesn't have an id
         if (view.id == View.NO_ID) {
             view.id = View.generateViewId()
+            return getViewType(view).toString() + "-" + view.id
         }
-
-        return getViewType(view).toString() + "-" + view.id
+        return view.id.toString()
 
     }
 
