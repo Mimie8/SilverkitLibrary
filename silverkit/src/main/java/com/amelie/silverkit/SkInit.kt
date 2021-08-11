@@ -18,6 +18,7 @@ import java.sql.Timestamp
 import kotlin.math.absoluteValue
 import kotlin.math.pow
 import kotlin.math.sqrt
+import kotlin.math.round
 
 class SkInit {
 
@@ -162,7 +163,9 @@ class SkInit {
 
         val den : Float = sqrt( (x2 - x1).pow(2) + (y2 - y1).pow(2) )
 
-        return "%.2f".format(num / den).toFloat()
+        val result : Float = num / den
+
+        return round((result) * 100) / 100
 
     }
 
@@ -188,7 +191,7 @@ class SkInit {
 
         val result =sqrt(((centerOfView[0] - gravityX).pow(2) - (centerOfView[1] - gravityY).pow(2)).absoluteValue)
 
-        return "%.2f".format(result).toFloat()
+        return round((result) * 100) / 100
     }
 
     private fun viewDelimitations(viewID: String, activity: String, viewsData: MutableList<SkCoordsData>) : List<Int>{
