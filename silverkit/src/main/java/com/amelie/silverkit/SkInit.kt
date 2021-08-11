@@ -5,22 +5,24 @@ import android.app.Activity
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.res.Configuration
+import android.graphics.Color
 import android.graphics.Point
+import android.graphics.drawable.ColorDrawable
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
+import androidx.annotation.ColorInt
+import androidx.core.graphics.ColorUtils
+import androidx.core.graphics.ColorUtils.HSLToColor
+import androidx.core.graphics.ColorUtils.colorToHSL
 import com.amelie.silverkit.datamanager.SkAnalysisData
 import com.amelie.silverkit.datamanager.SkClicksData
 import com.amelie.silverkit.datamanager.SkCoordsData
 import com.amelie.silverkit.datamanager.SkHardwareData
-import java.math.BigDecimal
-import java.math.RoundingMode
 import java.sql.Timestamp
-import kotlin.math.absoluteValue
-import kotlin.math.pow
-import kotlin.math.sqrt
-import kotlin.math.round
+import kotlin.math.*
+
 
 class SkInit {
 
@@ -62,13 +64,253 @@ class SkInit {
     // -------------------- TACTICS
     private fun applyTactics(dbHelper : DatabaseHelper, activity: Activity){
 
-        // Get data from table and see if it's necessary to apply tactics, if yes apply tactics
-        val analysisDataOfActivity = dbHelper.getAnalysisData(activity.localClassName)
-        Log.d("info", "Analysis Data : $analysisDataOfActivity ")
+        // Get data from table
+        val viewsData = dbHelper.getViewsData()
+        val analysisData = dbHelper.getAnalysisData(activity.localClassName)
 
-        //applyColorContrastTactic(analysisDataOfActivity)
-        //applySizeTactic(analysisDataOfActivity)
-        //applyGravityCenterTactic(analysisDataOfActivity)
+        // See if it's necessary to apply tactics for the view, if yes apply tactics
+        for (data in analysisData){
+            applyColorContrastTactic(activity, data, viewsData)
+            applyResizeTactic(data)
+            applyGravityCenterTactic(data)
+        }
+    }
+
+    private fun applyColorContrastTactic(activity: Activity, viewAnalysisData: SkAnalysisData, viewsData : List<SkCoordsData>){
+
+        // Get color of view
+        val viewID = viewAnalysisData.viewID
+        val resourceID = getResId(viewID, R.layout::class.java)
+        val view = activity.window?.decorView?.findViewById(resourceID) as View
+        val viewColor = getViewColor(view)
+
+        // Get color of the view behind
+        val viewBehindColor = getViewBehindColor(view)
+
+        // Change brightness level of the view based and the view behind color
+        val result = changeBrightnessLevel(view, viewColor, viewBehindColor)
+        if(result){
+            Log.d("info", " Apply Color Contrast Tactic : SUCCESSFUL ")
+        } else {
+            Log.d("info", " Apply Color Contrast Tactic : ERROR ")
+        }
+    }
+
+    private fun getViewBehindColor(view:View) : Int?{
+
+        var color : Int?
+
+        // Get the first parent to have a color else null
+        while (view.parent != null){
+            val parent = view.parent as View
+            color = getViewColor(parent)
+            if(color != null){
+                return color
+            }
+        }
+        return null
+    }
+
+    /**
+     * @return List<Double> H S L A (A = Opacity)
+     */
+    private fun getViewColor(view:View) : Int?{
+        val viewBackground = view.background
+        if (viewBackground is ColorDrawable){
+            return viewBackground.color
+            /*
+            val viewColorHex = java.lang.String.format("#%06X", 0xFFFFFF and viewColor)
+            val viewColorRGB = Color.parseColor(viewColorHex)
+
+            val red = Color.red(viewColor)
+            val blue = Color.blue(viewColor)
+            val green = Color.green(viewColor)
+            val viewColorOpacity = Color.alpha(viewColor)
+            val viewColorHSL = rgbToHsl(red, green, blue)
+
+            Log.d("info", "getViewColor HSLA: ${viewColorHSL[0]} ${viewColorHSL[1]} ${viewColorHSL[2]} $viewColorOpacity")
+            return listOf(viewColorHSL[0], viewColorHSL[1], viewColorHSL[2], viewColorOpacity.toDouble())
+            */
+        }
+        return null
+    }
+
+    private fun lightenColor(color: Int, value: Float): Int {
+        val hsl: FloatArray = floatArrayOf()
+        colorToHSL(color, hsl)
+        hsl[2] += value / 100
+        hsl[2] = max(0f, min(hsl[2], 1f))
+        return HSLToColor(hsl)
+    }
+
+    private fun darkenColor(color: Int, value: Float): Int {
+        val hsl: FloatArray = floatArrayOf()
+        colorToHSL(color, hsl)
+        hsl[2] -= value / 100
+        hsl[2] = max(0f, min(hsl[2], 1f))
+        return HSLToColor(hsl)
+    }
+
+    /*
+    /**
+     * Converts an HSL color value to RGB. Conversion formula
+     * adapted from http://en.wikipedia.org/wiki/HSL_color_space.
+     * Assumes h, s, and l are contained in the set [0, 1] and
+     * returns r, g, and b in the set [0, 255].
+     *
+     * @param   {number}  h       The hue
+     * @param   {number}  s       The saturation
+     * @param   {number}  l       The lightness
+     * @return  {Array}           The RGB representation
+     */
+    private fun hslToRgb(h : Double, s : Double, l : Double) : List<Double>{
+        val r : Double
+        val g : Double
+        val b : Double
+
+        if(s == (0).toDouble()){
+            // achromatic
+            r = l
+            g = l
+            b = l
+        }else{
+
+            val q = if(l < 0.5){
+                l * (1 + s)
+            } else {
+                l + s - l * s
+            }
+
+            val p = 2 * l - q
+
+            r = hue2rgb(p, q, h + 1/3)
+            g = hue2rgb(p, q, h)
+            b = hue2rgb(p, q, h - 1/3)
+        }
+
+        return listOf(Math.round(r * 255).toDouble(), Math.round(g * 255).toDouble(), Math.round(b * 255).toDouble())
+    }
+
+    /**
+     * Converts an RGB color value to HSL. Conversion formula
+     * adapted from http://en.wikipedia.org/wiki/HSL_color_space.
+     * Assumes r, g, and b are contained in the set [0, 255] and
+     * returns h, s, and l in the set [0, 1].
+     *
+     * @param   {number}  r       The red color value
+     * @param   {number}  g       The green color value
+     * @param   {number}  b       The blue color value
+     * @return  {Array}           The HSL representation
+     */
+    private fun rgbToHsl(r : Int, g : Int, b : Int): List<Double>{
+
+        val R : Double = r / (255).toDouble()
+        val G : Double = g / (255).toDouble()
+        val B : Double = b / (255).toDouble()
+
+        val maximum = max(max(R, G), B)
+        val minimum = min(min(R, G), B)
+        var h : Double = (maximum + minimum) / 2
+        var s : Double = (maximum + minimum) / 2
+        val l : Double = (maximum + minimum) / 2
+
+        if(maximum == minimum){
+            // achromatic
+            h = (0).toDouble()
+            s = (0).toDouble()
+        }else{
+            val d = maximum - minimum
+            s = if(l > 0.5){
+                d / (2 - maximum - minimum)
+            } else {
+                d / (maximum + minimum)
+            }
+
+            val temp = if(g < b){
+                (6).toDouble()
+            } else {
+                (0).toDouble()
+            }
+
+            when(maximum){
+                R -> h = (g - b) / d + temp
+                G -> h = (b - r) / d + 2
+                B -> h = (r - g) / d + 4
+            }
+
+            h /= 6
+        }
+
+        return listOf(h, s, l)
+    }
+
+    private fun hue2rgb(p : Double, q : Double, t: Double) : Double{
+
+        var a = t
+
+        if(a < 0) a += 1
+        if(a > 1) a -= 1
+        if(a < 1/6) return p + (q - p) * 6 * a
+        if(a < 1/2) return q
+        if(a < 2/3) return p + (q - p) * (2/3 - a) * 6
+        return p
+    }
+    */
+
+
+    private fun changeBrightnessLevel(view:View, viewColor: Int?, viewBehindColor:Int?) : Boolean {
+
+        var viewBColor = viewBehindColor
+
+        // If view has a background color
+        if(viewColor != null){
+            // If the view behind doesn't have a background color set it to white full opacity
+            if(viewBColor == null){
+                viewBColor = Color.WHITE
+            }
+            // Get brightness level of both views
+            val viewHSL: FloatArray = floatArrayOf()
+            val viewBehindHSL: FloatArray = floatArrayOf()
+            colorToHSL(viewColor, viewHSL)
+            colorToHSL(viewBColor, viewBehindHSL)
+            val viewL = viewHSL[2]
+            val viewBehindL = viewBehindHSL[2]
+
+            // If view behind brightness > view brightness : darkened the view, else : lightened the view
+            var newColor : Int? = null
+            if(viewL > viewBehindL){
+                // lighten
+                newColor = lightenColor(viewColor, 20f)
+            } else {
+                // darken
+                newColor = darkenColor(viewColor, 20f)
+            }
+
+            // Apply new color on view
+            view.setBackgroundColor(newColor)
+            Log.d("info", " Apply Color Contrast Tactic : NEW COLOR = $newColor ")
+
+            return true
+        }
+        return false
+    }
+
+    private fun applyResizeTactic(viewAnalysisData: SkAnalysisData){
+
+    }
+
+    private fun applyGravityCenterTactic(viewAnalysisData: SkAnalysisData){
+
+    }
+
+    private fun getResId(resName: String?, c: Class<*>): Int {
+        return try {
+            val idField = c.getDeclaredField(resName!!)
+            idField.getInt(idField)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            -1
+        }
     }
 
 

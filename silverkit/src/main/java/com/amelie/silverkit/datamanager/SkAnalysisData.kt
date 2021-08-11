@@ -21,7 +21,7 @@ class SkAnalysisData {
     }
 
     override fun toString(): String {
-        return "SkClicksData(viewID=$viewID, viewLocal=$viewLocal, errorRatio=$errorRatio, averageDistFromBorder=$averageDistFromBorder, distGravityCenter=$distGravityCenter)"
+        return "SkAnalysisData(viewID=$viewID, viewLocal=$viewLocal, errorRatio=$errorRatio, averageDistFromBorder=$averageDistFromBorder, distGravityCenter=$distGravityCenter)"
     }
 
 }
