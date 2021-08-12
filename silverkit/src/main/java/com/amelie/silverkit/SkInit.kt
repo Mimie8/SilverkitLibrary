@@ -104,13 +104,14 @@ class SkInit {
 
         var color : Int?
 
+        var parent = view.parent as View
         // Get the first parent to have a color else null
-        while (view.parent != view.rootView){
-            val parent = view.parent as View
+        while (parent != view.rootView as View){
             color = getViewColor(parent)
             if(color != null){
                 return color
             }
+            parent = parent.parent as View
         }
         return null
     }
