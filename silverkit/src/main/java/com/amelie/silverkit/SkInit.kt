@@ -147,8 +147,8 @@ class SkInit {
                 newRatio > 0.1f
             } else {
                 // La tactique fonctionne pas et empire les résultats
-                if(oldRatio + 0.1f <= newRatio){
-                    // Si les resultats empire plus d'un certains seuil (de 0.1 de ratio) on enleve la tactique
+                if(oldRatio + 0.3f <= newRatio){
+                    // Si les resultats empire plus d'un certains seuil (de 0.3 de ratio) on enleve la tactique
                     removeColorContrastTactic(viewAnalysisData.viewID, view, activity)
                     Log.d("info", " checkColorContrastTacticCdt : REMOVE TACTIC ")
                     false
