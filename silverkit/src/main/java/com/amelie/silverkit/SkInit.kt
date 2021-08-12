@@ -172,6 +172,7 @@ class SkInit {
         val dbHelper =  DatabaseHelper(context)
 
         val color = dbHelper.getViewBaseColor(viewID, viewActivity.localClassName)
+        Log.d("info", " Remove Color Contrast Tactic : VIEW $viewID BASE COLOR $color ")
 
         // Apply basic color of view
         if(color != null){
