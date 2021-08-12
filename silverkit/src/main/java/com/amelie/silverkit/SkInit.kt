@@ -8,6 +8,7 @@ import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.Point
 import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.Drawable
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
@@ -117,6 +118,7 @@ class SkInit {
     }
 
     private fun getViewColor(view:View) : Int?{
+
 
         return try{
             val background = view.background as ColorDrawable
@@ -280,8 +282,8 @@ class SkInit {
                 viewBColor = Color.WHITE
             }
             // Get brightness level of both views
-            val viewHSL: FloatArray = floatArrayOf()
-            val viewBehindHSL: FloatArray = floatArrayOf()
+            val viewHSL = FloatArray(3)
+            val viewBehindHSL = FloatArray(3)
             colorToHSL(viewColor, viewHSL)
             colorToHSL(viewBColor, viewBehindHSL)
             val viewL = viewHSL[2]
