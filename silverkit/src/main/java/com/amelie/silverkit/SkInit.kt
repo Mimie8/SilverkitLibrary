@@ -80,7 +80,8 @@ class SkInit {
 
         // Get color of view
         val viewID = viewAnalysisData.viewID
-        val resourceID = getResId(viewID, R.drawable::class.java)
+        val resourceID = activity.baseContext.resources.getIdentifier(viewID, "layout", activity.packageName)
+        //val resourceID = getResId(viewID, R.layout::class.java)
         Log.d("info", " applyColorContrastTactic ID : viewID $viewID , resourceID $resourceID ")
         val view = activity.window?.decorView?.findViewById(resourceID) as View
         val viewColor = getViewColor(view)
@@ -634,7 +635,7 @@ class SkInit {
         }
     }
 
-     fun getAllChildren(v: View): List<View> {
+     private fun getAllChildren(v: View): List<View> {
         if (v !is ViewGroup) {
             return ArrayList()
         }
