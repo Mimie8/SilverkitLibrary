@@ -394,7 +394,7 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
         return try{
             val cursor = db.rawQuery(query, null)
             if(cursor.moveToFirst()){
-                val color = cursor.getInt(8)
+                val color = cursor.getInt(7)
                 cursor.close()
                 color
             } else {
