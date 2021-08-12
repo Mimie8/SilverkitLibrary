@@ -671,21 +671,24 @@ class SkInit {
     private fun getViewID(view: View): String {
 
         // view doesn't have an id
+        Log.d("info", "VIEW ID : ${view.id}")
         if (view.id == View.NO_ID) {
             view.id = View.generateViewId()
+            Log.d("info", "RETURNED VIEW ID : ${getViewType(view).toString() + "-" + view.id}")
             return getViewType(view).toString() + "-" + view.id
         }
+        Log.d("info", "RETURNED VIEW ID : ${view.id}")
         return view.id.toString()
 
     }
 
     private fun getViewType(view: View) : SkTools.ViewType {
 
-        if(view is SkTools){
-            return view.getType()
+        return if(view is SkTools){
+            view.getType()
         } else {
             Log.d("info", "SILVERKIT TOOL ONTOUCH : not a sk view)")
-            return SkTools.ViewType.NONE
+            SkTools.ViewType.NONE
         }
 
     }
