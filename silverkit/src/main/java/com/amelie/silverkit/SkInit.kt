@@ -149,7 +149,7 @@ class SkInit {
     }
 
     private fun lightenColor(color: Int, value: Float): Int {
-        val hsl: FloatArray = floatArrayOf()
+        val hsl: FloatArray = floatArrayOf(1f,1f,1f)
         colorToHSL(color, hsl)
         hsl[2] += value / 100
         hsl[2] = max(0f, min(hsl[2], 1f))
@@ -157,7 +157,7 @@ class SkInit {
     }
 
     private fun darkenColor(color: Int, value: Float): Int {
-        val hsl: FloatArray = floatArrayOf()
+        val hsl: FloatArray = floatArrayOf(1f,1f,1f)
         colorToHSL(color, hsl)
         hsl[2] -= value / 100
         hsl[2] = max(0f, min(hsl[2], 1f))
