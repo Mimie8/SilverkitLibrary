@@ -118,6 +118,14 @@ class SkInit {
      * @return List<Double> H S L A (A = Opacity)
      */
     private fun getViewColor(view:View) : Int?{
+
+        return try{
+            val background = view.background as ColorDrawable
+            return background.color
+        } catch (e:Exception){
+            null
+        }
+        /*
         val viewBackground = view.background
         if (viewBackground is ColorDrawable){
             return viewBackground.color
@@ -136,6 +144,7 @@ class SkInit {
             */
         }
         return null
+        */
     }
 
     private fun lightenColor(color: Int, value: Float): Int {
