@@ -282,8 +282,8 @@ class SkInit {
                 viewBColor = Color.WHITE
             }
             // Get brightness level of both views
-            val viewHSL = FloatArray(3)
-            val viewBehindHSL = FloatArray(3)
+            val viewHSL = floatArrayOf(1f,1f,1f)
+            val viewBehindHSL = floatArrayOf(1f,1f,1f)
             colorToHSL(viewColor, viewHSL)
             colorToHSL(viewBColor, viewBehindHSL)
             val viewL = viewHSL[2]
