@@ -60,19 +60,20 @@ interface SkTools {
         // view doesn't have an id
         if (view.id == View.NO_ID) {
             view.id = View.generateViewId()
+            return getViewType(view).toString() + "-" + view.id
         }
 
-        return getViewType(view).toString() + "-" + view.id
+        return view.id.toString()
 
     }
 
     private fun getViewType(view: View) : ViewType{
 
-        if(view is SkTools){
-            return view.getType()
+        return if(view is SkTools){
+            view.getType()
         } else {
             Log.d("info", "SILVERKIT TOOL ONTOUCH : not a sk view)")
-            return ViewType.NONE
+            ViewType.NONE
         }
 
     }
