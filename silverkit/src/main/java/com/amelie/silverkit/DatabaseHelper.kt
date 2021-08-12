@@ -8,6 +8,7 @@ import android.util.Log
 import com.amelie.silverkit.datamanager.SkAnalysisData
 import com.amelie.silverkit.datamanager.SkClicksData
 import com.amelie.silverkit.datamanager.SkCoordsData
+import com.amelie.silverkit.datamanager.SkHardwareData
 import java.math.BigDecimal
 
 
@@ -31,6 +32,9 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
         const val C_TOPLEFT_Y = "TOP_LEFT_Y"
         const val C_BOTTOMRIGHT_X = "BOTTOM_RIGHT_X"
         const val C_BOTTOMRIGHT_Y = "BOTTOM_RIGHT_Y"
+        const val C_BASE_COLOR = "BASE_COLOR"
+        const val C_BASE_SIZE_WIDTH = "BASE_SIZE_WIDTH"
+        const val C_BASE_SIZE_HEIGHT = "BASE_SIZE_HEIGHT"
 
         const val T_DEVICE_DATA = "DEVICE_DATA_TABLE"
         const val C_DEVICE_DATA_ID = "ID"
@@ -50,7 +54,7 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
     override fun onCreate(db: SQLiteDatabase) {
 
         val createClickEventTable = "CREATE TABLE $T_CLICK_EVENTS ($C_CLICK_ID INTEGER PRIMARY KEY AUTOINCREMENT, $C_VIEW_ID TEXT, $C_VIEW_TYPE TEXT, $C_VIEW_ACTIVTY TEXT, $C_CLICK_X INT, $C_CLICK_Y INT, $C_TIMESTAMP TEXT)"
-        val createViewDataTable = "CREATE TABLE $T_VIEW_DATA ($C_VIEW_DATA_ID INTEGER PRIMARY KEY AUTOINCREMENT, $C_VIEW_ID TEXT, $C_VIEW_ACTIVTY TEXT, $C_TOPLEFT_X INT, $C_TOPLEFT_Y INT, $C_BOTTOMRIGHT_X INT, $C_BOTTOMRIGHT_Y INT)"
+        val createViewDataTable = "CREATE TABLE $T_VIEW_DATA ($C_VIEW_DATA_ID INTEGER PRIMARY KEY AUTOINCREMENT, $C_VIEW_ID TEXT, $C_VIEW_ACTIVTY TEXT, $C_TOPLEFT_X INT, $C_TOPLEFT_Y INT, $C_BOTTOMRIGHT_X INT, $C_BOTTOMRIGHT_Y INT, $C_BASE_COLOR INT, $C_BASE_SIZE_WIDTH INT, $C_BASE_SIZE_HEIGHT INT)"
         val createDeviceDataTable = "CREATE TABLE $T_DEVICE_DATA ($C_DEVICE_DATA_ID INTEGER PRIMARY KEY AUTOINCREMENT, $C_SCREEN_WIDTH INT, $C_SCREEN_HEIGHT INT, $C_CORRECTIONS_TIMESTAMP TEXT)"
         val createAnalysisDataTable = "CREATE TABLE $T_ANALYSIS_DATA ($C_ANALYSIS_DATA_ID INTEGER PRIMARY KEY AUTOINCREMENT, $C_VIEW_ID TEXT, $C_VIEW_ACTIVTY TEXT, $C_ERROR_RATIO TEXT, $C_AVERAGE_DIST_FROM_BORDER TEXT, $C_DIST_GRAVITY_CENTER TEXT)"
 
@@ -111,6 +115,9 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
             cv.put(C_TOPLEFT_Y, view_data.coordTL?.get(1))
             cv.put(C_BOTTOMRIGHT_X, view_data.coordDR?.get(0))
             cv.put(C_BOTTOMRIGHT_Y, view_data.coordDR?.get(1))
+            cv.put(C_BASE_COLOR, view_data.baseColor)
+            cv.put(C_BASE_SIZE_WIDTH, view_data.baseSizeWidth)
+            cv.put(C_BASE_SIZE_HEIGHT, view_data.baseSizeHeight)
 
             val result = db.insert(T_VIEW_DATA, null, cv)
 
@@ -248,9 +255,9 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
         return true
     }
 
-    fun getClicksData() : MutableList<SkClicksData> {
+    fun getClicksDataSinceLastAnalysis(lastCorrectionTimestamp : String) : MutableList<SkClicksData> {
         val db = this.readableDatabase
-        val query = "SELECT * FROM $T_CLICK_EVENTS"
+        val query = "SELECT * FROM $T_CLICK_EVENTS WHERE $C_CORRECTIONS_TIMESTAMP > \'$lastCorrectionTimestamp\'"
 
         val clicksData = mutableListOf<SkClicksData>()
 
@@ -295,8 +302,11 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
                         val tl_y = cursor.getInt(4)
                         val dr_x = cursor.getInt(5)
                         val dr_y = cursor.getInt(6)
+                        val baseColor = cursor.getInt(7)
+                        val baseWidth = cursor.getInt(8)
+                        val baseHeight = cursor.getInt(9)
 
-                        val data = SkCoordsData(viewID, viewActivity, listOf(tl_x, tl_y), listOf(dr_x, dr_y))
+                        val data = SkCoordsData(viewID, viewActivity, listOf(tl_x, tl_y), listOf(dr_x, dr_y), baseColor, baseWidth, baseHeight)
                         viewsData.add(data)
                     }
                 }
@@ -355,6 +365,43 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
             return analysisData
         } catch (e: Exception){
             return mutableListOf()
+        }
+    }
+
+    fun updateLastCorrectionTimestamp(newTimestamp : String) : Boolean{
+        val db = this.writableDatabase
+        val cv = ContentValues()
+        cv.put(C_CORRECTIONS_TIMESTAMP, newTimestamp)
+
+        val where = "id=?"
+        val whereArgs = arrayOf(java.lang.String.valueOf(1))
+
+        return try{
+            db.update(T_DEVICE_DATA, cv, where, whereArgs)
+            Log.d("info", "DATABASE SK : SUCCESSFULLY UPDATED THE LAST CORRECTION TIMESTAMP")
+            true
+        } catch (e: Exception){
+            Log.d("info", "DATABASE SK : ERROR WHILE UPDATING THE LAST CORRECTION TIMESTAMP")
+            false
+        }
+    }
+
+    fun getViewBaseColor(viewID : String, activity: String) : Int?{
+        val db = this.readableDatabase
+        val query = "SELECT * FROM $T_VIEW_DATA WHERE $C_VIEW_ID = \'$viewID\' AND $C_VIEW_ACTIVTY = '$activity'"
+
+        return try{
+            val cursor = db.rawQuery(query, null)
+            if(cursor.moveToFirst()){
+                val color = cursor.getInt(8)
+                cursor.close()
+                color
+            } else {
+                cursor.close()
+                null
+            }
+        } catch (e: Exception){
+            null
         }
     }
 
