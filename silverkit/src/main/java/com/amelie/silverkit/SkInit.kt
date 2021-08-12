@@ -133,10 +133,10 @@ class SkInit {
 
         if(viewOldAnalysisData != null){
             // If there is old data than compare to new
-            val oldRatio = viewOldAnalysisData.errorRatio
-            val newRatio = viewAnalysisData.errorRatio
-            val oldDistFromBorder = viewOldAnalysisData.averageDistFromBorder
-            val newDistFromBorder = viewAnalysisData.averageDistFromBorder
+            val oldRatio : Float = viewOldAnalysisData.errorRatio
+            val newRatio : Float = viewAnalysisData.errorRatio
+            val oldDistFromBorder : Float = viewOldAnalysisData.averageDistFromBorder
+            val newDistFromBorder : Float = viewAnalysisData.averageDistFromBorder
 
             Log.d("info", " checkColorContrastTacticCdt : oldRatio $oldRatio newRatio $newRatio oldDistFromBorder $oldDistFromBorder newDistFromBorder $newDistFromBorder")
 
