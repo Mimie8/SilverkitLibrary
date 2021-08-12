@@ -51,17 +51,30 @@ class SkInit {
         val context = activity.baseContext
         val dbHelper =  DatabaseHelper(context)
 
+        val deviceData = dbHelper.getDeviceData()
+
         // Look if it's time to analyse
         if(dbHelper.isAnalysisTime()){
 
-            // Analyse data, save to bd and return old analysis data to compare
-            val oldAnalysisData = analyseData(dbHelper, activity)
+            // Get clicks data done since last correction
+            val lastCorrectionTimestamp = deviceData[2] as String
+            val clicks = dbHelper.getClicksDataSinceLastAnalysis(lastCorrectionTimestamp)
 
-            //Get new analysis data
-            val newAnalysisData = dbHelper.getAnalysisData(activity.localClassName)
+            // At least 10 clicks from last analyse to analyse data
+            if(clicks.size > 10){
+                Log.d("info", "applyCorrections : ANALYSING DATA ... ")
 
-            // Apply tactics if necessary
-            applyTactics(dbHelper, activity, oldAnalysisData, newAnalysisData)
+                // Analyse data, save to bd and return old analysis data to compare
+                val oldAnalysisData = analyseData(dbHelper, activity, clicks, deviceData)
+
+                //Get new analysis data
+                val newAnalysisData = dbHelper.getAnalysisData(activity.localClassName)
+
+                // Apply tactics if necessary
+                applyTactics(dbHelper, activity, oldAnalysisData, newAnalysisData)
+            } else {
+                Log.d("info", "applyCorrections : NOT ENOUGH CLICKS ON VIEW SINCE LAST ANALYSE TO ANALYSE ")
+            }
         }
     }
 
@@ -406,20 +419,15 @@ class SkInit {
      * Change last correction date
      * return old analysis data to compare with new
      */
-    private fun analyseData(dbHelper : DatabaseHelper, activity: Activity) : List<SkAnalysisData>{
+    private fun analyseData(dbHelper : DatabaseHelper, activity: Activity, clicks : MutableList<SkClicksData>, deviceData : List<Any>) : List<SkAnalysisData>{
 
         // Get data from DB
         val views = dbHelper.getViewsData()
-        val deviceData = dbHelper.getDeviceData()
 
         // Get previous analysis data of activity since last analyse
         val oldAnalysisData = dbHelper.getAnalysisData(activity.localClassName)
 
-        // Get clicks data done since last correction
-        val lastCorrectionTimestamp = deviceData[2] as String
-        val clicks = dbHelper.getClicksDataSinceLastAnalysis(lastCorrectionTimestamp)
-
-        // Analyse Data for each view in activity
+        // Analyse Data for each view in activity, if at least 10
         if(clicks.isNotEmpty() && views.isNotEmpty()){
 
             // Analyse data from all the views in this activity and save to table in DB
