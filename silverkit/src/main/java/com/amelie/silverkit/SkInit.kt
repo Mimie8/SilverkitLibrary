@@ -140,7 +140,7 @@ class SkInit {
 
             Log.d("info", " checkColorContrastTacticCdt : oldRatio $oldRatio newRatio $newRatio oldDistFromBorder $oldDistFromBorder newDistFromBorder $newDistFromBorder")
 
-            return if((oldRatio > newRatio) || (oldDistFromBorder > newDistFromBorder)){
+            return if((oldRatio >= newRatio) || (oldDistFromBorder >= newDistFromBorder)){
                 // La tactique fonctionne
                 // Si newRatio > 0.1 on continue d'appliquer sinon on arrête d'appliquer la tactique
                 Log.d("info", " checkColorContrastTacticCdt : CONTINUE TO APPLY TACTIC : newRatio $newRatio ${newRatio > 0.1f} ")
@@ -376,10 +376,10 @@ class SkInit {
             var newColor : Int? = null
             if(viewL > viewBehindL){
                 // lighten
-                newColor = lightenColor(viewColor, 20f)
+                newColor = lightenColor(viewColor, 10f)
             } else {
                 // darken
-                newColor = darkenColor(viewColor, 20f)
+                newColor = darkenColor(viewColor, 10f)
             }
 
             // Apply new color on view
