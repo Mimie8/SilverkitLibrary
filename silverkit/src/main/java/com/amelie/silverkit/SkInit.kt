@@ -143,7 +143,7 @@ class SkInit {
             return if((oldRatio > newRatio) || (oldDistFromBorder > newDistFromBorder)){
                 // La tactique fonctionne
                 // Si newRatio > 0.1 on continue d'appliquer sinon on arrête d'appliquer la tactique
-                Log.d("info", " checkColorContrastTacticCdt : CONTINUE TO APPLY TACTIC : ${newRatio > 0.1f} ")
+                Log.d("info", " checkColorContrastTacticCdt : CONTINUE TO APPLY TACTIC : newRatio $newRatio ${newRatio > 0.1f} ")
                 newRatio > 0.1f
             } else {
                 // La tactique fonctionne pas et empire les résultats
