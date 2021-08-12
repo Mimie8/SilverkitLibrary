@@ -81,13 +81,14 @@ class SkInit {
         // Get color of view
         val viewID = viewAnalysisData.viewID
         val resourceID = activity.baseContext.resources.getIdentifier(viewID, "layout", activity.packageName)
-        //val resourceID = getResId(viewID, R.layout::class.java)
         Log.d("info", " applyColorContrastTactic ID : viewID $viewID , resourceID $resourceID ")
         val view = activity.window?.decorView?.findViewById(resourceID) as View
         val viewColor = getViewColor(view)
+        Log.d("info", " viewColor : $viewColor ")
 
         // Get color of the view behind
         val viewBehindColor = getViewBehindColor(view)
+        Log.d("info", " viewBehindColor : $viewBehindColor ")
 
         // Change brightness level of the view based and the view behind color
         val result = changeBrightnessLevel(view, viewColor, viewBehindColor)
@@ -303,16 +304,6 @@ class SkInit {
 
     private fun applyGravityCenterTactic(viewAnalysisData: SkAnalysisData){
 
-    }
-
-    private fun getResId(resName: String?, c: Class<*>): Int {
-        return try {
-            val idField = c.getDeclaredField(resName!!)
-            idField.getInt(idField)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            -1
-        }
     }
 
 
