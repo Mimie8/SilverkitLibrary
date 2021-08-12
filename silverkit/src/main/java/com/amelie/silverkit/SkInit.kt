@@ -83,6 +83,7 @@ class SkInit {
         val resourceID = activity.baseContext.resources.getIdentifier(viewID, "layout", activity.packageName)
         Log.d("info", " applyColorContrastTactic ID : viewID $viewID , resourceID $resourceID ")
         val view = activity.window?.decorView?.findViewById(resourceID) as View
+        Log.d("info", " view : $view ")
         val viewColor = getViewColor(view)
         Log.d("info", " viewColor : $viewColor ")
 
@@ -114,9 +115,6 @@ class SkInit {
         return null
     }
 
-    /**
-     * @return List<Double> H S L A (A = Opacity)
-     */
     private fun getViewColor(view:View) : Int?{
 
         return try{
