@@ -403,7 +403,7 @@ class SkInit {
 
         val db =  DatabaseHelper(activity.baseContext)
         val viewsData = db.getViewsDataOfActivity(activity.localClassName)
-        val tactic = db.getTacticsDataOfView(viewID, activity.localClassName)!!
+        val tactic = db.getTacticsDataOfView(viewID, activity.localClassName)
 
         val lp = view.layoutParams
         val isWrapContent = (lp.height == ViewGroup.LayoutParams.WRAP_CONTENT || lp.width == ViewGroup.LayoutParams.WRAP_CONTENT)
@@ -425,10 +425,23 @@ class SkInit {
                     val centerOfView = centerOfView(delimitations)
 
                     if(centerOfView != null){
-                        var paddingStart = tactic.paddingStart
-                        var paddingEnd = tactic.paddingEnd
-                        var paddingTop = tactic.paddingTop
-                        var paddingBottom = tactic.paddingBottom
+
+                        var paddingStart : Int
+                        var paddingEnd: Int
+                        var paddingTop: Int
+                        var paddingBottom: Int
+
+                        if(tactic == null){
+                            paddingStart = view.paddingStart
+                            paddingEnd = view.paddingEnd
+                            paddingTop = view.paddingTop
+                            paddingBottom = view.paddingBottom
+                        } else {
+                            paddingStart = tactic.paddingStart
+                            paddingEnd = tactic.paddingEnd
+                            paddingTop = tactic.paddingTop
+                            paddingBottom = tactic.paddingBottom
+                        }
 
                         // S'il y a la place, add paddings
 
