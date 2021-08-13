@@ -443,39 +443,44 @@ class SkInit {
                             paddingBottom = tactic.paddingBottom
                         }
 
+                        var newPS = paddingStart
+                        var newPE = paddingEnd
+                        var newPT = paddingTop
+                        var newPB = paddingBottom
+
                         // S'il y a la place, add paddings
 
                         if(gravityCenterX < centerOfView[0]){
                             // left : move right
                             if(paddingStart < view.width){
-                                paddingStart += 4
+                                newPS += 4
                                 Log.d("info", " Apply Color Contrast Tactic : MOVE RIGHT ")
                             }
                         }
                         if(gravityCenterX > centerOfView[0]){
                             // right : move left
                             if(paddingEnd < view.width){
-                                paddingEnd += 4
+                                newPE += 4
                                 Log.d("info", " Apply Color Contrast Tactic : MOVE LEFT ")
                             }
                         }
                         if(gravityCenterY < centerOfView[1]){
                             // top : move bottom
                             if(paddingTop < view.height){
-                                paddingTop += 4
+                                newPT += 4
                                 Log.d("info", " Apply Color Contrast Tactic : MOVE BOTTOM ")
                             }
                         }
                         if(gravityCenterY > centerOfView[1]){
                             // bottom : move top
                             if(paddingBottom < view.height){
-                                paddingBottom += 4
+                                newPB += 4
                                 Log.d("info", " Apply Color Contrast Tactic : MOVE TOP ")
                             }
                         }
 
                         view.setPadding(paddingStart, paddingTop, paddingEnd, paddingBottom)
-                        val tacticsData = SkTacticsData(viewID, activity.localClassName, getViewColor(view), paddingStart, paddingEnd, paddingTop, paddingBottom, tactic.paddingStart, tactic.paddingEnd, tactic.paddingTop, tactic.paddingBottom)
+                        val tacticsData = SkTacticsData(viewID, activity.localClassName, getViewColor(view), newPS, newPE, newPT, newPB, paddingStart, paddingEnd, paddingTop, paddingBottom)
                         db.saveTacticsData(tacticsData)
 
                         Log.d("info", " Apply Color Contrast Tactic : SUCCESSFUL ")
