@@ -8,13 +8,10 @@ import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.Point
 import android.graphics.drawable.ColorDrawable
-import android.graphics.drawable.Drawable
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
-import androidx.annotation.ColorInt
-import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.ColorUtils.HSLToColor
 import androidx.core.graphics.ColorUtils.colorToHSL
 import com.amelie.silverkit.datamanager.*
@@ -167,7 +164,7 @@ class SkInit {
         if(newAnalysisData != null){
 
             applyColorContrastTactic(activity, newAnalysisData, oldAnalysisData)
-            //applyResizeTactic(data)
+            applyResizeTactic(activity, newAnalysisData, oldAnalysisData)
             applyGravityCenterTactic(activity, newAnalysisData, oldAnalysisData)
 
         }
@@ -188,7 +185,7 @@ class SkInit {
         Log.d("info", " viewBehindColor : $viewBehindColor ")
 
         // If condition is ok to apply the tactic, apply it
-        if(checkColorContrastTacticCdt(newAnalysisData, oldAnalysisData, view, viewColor, viewBehindColor, activity)){
+        if(checkColorContrastTactic(newAnalysisData, oldAnalysisData, view, viewColor, viewBehindColor, activity)){
 
             // Change brightness level of the view based and the view behind color
             if(viewColor != null){
@@ -208,16 +205,11 @@ class SkInit {
         }
     }
 
-    // verifier si l'application de la tactique a améliorer les resultats depuis la dernire application
-    // Si oui mais tjr < seuil : continuer
-    // Si oui > seuil : pas appliquer de tactiques
-    // Si empirer annuler l'application de la tactique
-
     /**
      * if oldErrorRatio > newErrorRatio : tactic fonctionne , sinon fonctionne pas
      *
      */
-    private fun checkColorContrastTacticCdt(newAnalysisData: SkAnalysisData, oldAnalysisData: SkAnalysisData?, view:View, viewColor: Int?, viewBehindColor: Int?, activity: Activity) : Boolean{
+    private fun checkColorContrastTactic(newAnalysisData: SkAnalysisData, oldAnalysisData: SkAnalysisData?, view:View, viewColor: Int?, viewBehindColor: Int?, activity: Activity) : Boolean{
 
         if(oldAnalysisData != null){
             // If there is old data than compare to new
@@ -230,12 +222,12 @@ class SkInit {
             val baseColor = dbHelper.getViewBaseColor(newAnalysisData.viewID, activity.localClassName)
             Log.d("info", " Remove Color Contrast Tactic : VIEW ${newAnalysisData.viewID} BASE COLOR $baseColor ")
 
-            Log.d("info", " checkColorContrastTacticCdt : oldRatio $oldRatio newRatio $newRatio")
+            Log.d("info", " checkColorContrastTactic : oldRatio $oldRatio newRatio $newRatio")
 
             return if((oldRatio >= newRatio)){
                 // La tactique fonctionne
                 // Si newRatio > 0.1 on continue d'appliquer sinon on arrête d'appliquer la tactique
-                Log.d("info", " checkColorContrastTacticCdt : CONTINUE TO APPLY TACTIC ${newRatio > 0.1f}")
+                Log.d("info", " checkColorContrastTactic : CONTINUE TO APPLY TACTIC ${newRatio > 0.1f}")
                 newRatio > 0.1f
             } else {
                 // La tactique fonctionne pas
@@ -260,7 +252,7 @@ class SkInit {
 
         } else {
             // If there isn't any old data than it's the first time we need to apply tactic if error ratio > 0.1
-            Log.d("info", " checkColorContrastTacticCdt : APPLY TACTIC : ${newAnalysisData.errorRatio > 0.1f} ")
+            Log.d("info", " checkColorContrastTactic : APPLY TACTIC : ${newAnalysisData.errorRatio > 0.1f} ")
             return newAnalysisData.errorRatio > 0.1f
         }
     }
@@ -372,6 +364,8 @@ class SkInit {
         var oPadE = 0
         var oPadT = 0
         var oPadB = 0
+        var width = 0
+        var height = 0
 
         if(tacticsData != null){
             padS = tacticsData.paddingStart
@@ -383,16 +377,189 @@ class SkInit {
             oPadE = tacticsData.oldPaddingEnd
             oPadT = tacticsData.oldPaddingTop
             oPadB = tacticsData.oldPaddingBottom
+
+            width = tacticsData.viewWidth
+            height = tacticsData.viewHeight
         }
 
-        val data = SkTacticsData(viewID, activity.localClassName, newColor, padS, padE, padT, padB, oPadS, oPadE, oPadT, oPadB)
+        val data = SkTacticsData(viewID, activity.localClassName, newColor, padS, padE, padT, padB, oPadS, oPadE, oPadT, oPadB, width, height)
         db.saveTacticsData(data)
         db.close()
 
     }
 
-    private fun applyResizeTactic(viewAnalysisData: SkAnalysisData){
+    private fun applyResizeTactic(activity: Activity, newAnalysisData: SkAnalysisData, oldAnalysisData: SkAnalysisData?){
 
+        val viewID = newAnalysisData.viewID
+        val resourceID = activity.baseContext.resources.getIdentifier(viewID, "layout", activity.packageName)
+        val view = activity.window?.decorView?.findViewById(resourceID) as View
+
+        val sizeJump = 2
+
+        if(checkResizeTactic(view, activity, newAnalysisData, oldAnalysisData)){
+
+            val context = activity.baseContext
+            val db =  DatabaseHelper(context)
+
+            val tactic = db.getTacticsDataOfView(newAnalysisData.viewID, activity.localClassName)
+
+            val color : Int?
+            val paddingStart : Int
+            val paddingEnd: Int
+            val paddingTop: Int
+            val paddingBottom: Int
+            val oldPaddingStart : Int
+            val oldPaddingEnd: Int
+            val oldPaddingTop: Int
+            val oldPaddingBottom: Int
+            val width : Int
+            val height : Int
+
+            if(tactic != null){
+                color = tactic.color
+                paddingStart = tactic.paddingStart
+                paddingEnd = tactic.paddingEnd
+                paddingTop = tactic.paddingTop
+                paddingBottom = tactic.paddingBottom
+                oldPaddingStart = tactic.oldPaddingStart
+                oldPaddingEnd = tactic.oldPaddingEnd
+                oldPaddingTop = tactic.oldPaddingTop
+                oldPaddingBottom = tactic.oldPaddingBottom
+                width = tactic.viewWidth
+                height = tactic.viewHeight
+            } else {
+                color = getViewColor(view)
+                paddingStart = view.paddingStart
+                paddingEnd = view.paddingEnd
+                paddingTop = view.paddingTop
+                paddingBottom = view.paddingBottom
+                oldPaddingStart = 0
+                oldPaddingEnd = 0
+                oldPaddingTop = 0
+                oldPaddingBottom = 0
+                width = view.width
+                height = view.height
+            }
+
+            val params = view.layoutParams
+            params.width  = width + sizeJump
+            params.height = height + sizeJump
+            view.layoutParams = params
+
+            val newData = SkTacticsData(viewID, activity.localClassName, color, paddingStart, paddingEnd, paddingTop, paddingBottom, oldPaddingStart, oldPaddingEnd, oldPaddingTop, oldPaddingBottom, width + sizeJump, height + sizeJump)
+            db.saveTacticsData(newData)
+
+            Log.d("info", " Apply Resize Tactic : SUCCESSFUL ")
+
+        } else {
+            Log.d("info", " Apply Resize Tactic : NOT NECESSARY ")
+        }
+    }
+
+    private fun checkResizeTactic(view:View, activity : Activity, newAnalysisData: SkAnalysisData, oldAnalysisData: SkAnalysisData?) : Boolean{
+
+        val context = activity.baseContext
+        val db =  DatabaseHelper(context)
+
+        val viewData = db.getViewData(newAnalysisData.viewID, activity.localClassName)
+
+        // we need to have access to basic size of view and view need to have a fixed size
+        if(isFixedSize(view)){
+            if(viewData != null){
+                val baseWidth = viewData.baseSizeWidth
+                val baseHeight = viewData.baseSizeHeight
+
+                // If basic size of view isnt null
+                if(baseWidth != null && baseHeight != null){
+
+                    val currentWidth = view.width
+                    val currentHeight = view.height
+                    val maxSizeRatio = 1.5f
+                    val sizeJump = 2
+                    val thresholdDist = 10
+                    val thresholdRatio = 0.1f
+
+                    // If applying the tactic doesn't change the size of the view of more than 1.5 times the basic size
+                    if((currentWidth + sizeJump <= baseWidth * maxSizeRatio) && (currentHeight + sizeJump <= baseHeight * maxSizeRatio )){
+
+                        val newRatio = newAnalysisData.errorRatio
+                        val newDist = newAnalysisData.averageDistFromBorder
+
+                        // If there is old data : compare
+                        if(oldAnalysisData != null){
+                            val oldRatio = oldAnalysisData.errorRatio
+                            val oldDist = oldAnalysisData.averageDistFromBorder
+
+                            if(oldRatio >= newRatio && oldDist > newDist){
+                                // Tactic works
+                                Log.d("info", " checkResizeTactic : CONTINUE TO APPLY TACTIC ${newRatio > 0.1f}")
+                                newAnalysisData.errorRatio > thresholdRatio && newAnalysisData.averageDistFromBorder > thresholdDist
+                            } else {
+                                // Tactics doesn't work
+                                if(currentWidth != baseWidth && currentHeight != baseHeight){
+                                    // Tactic précédemment appliquée
+                                    return if(oldRatio + 0.3f <= newRatio || oldDist + 20 <= newDist){
+                                        // Si les resultats empire plus d'un certains seuil (de 0.3 de ratio ou de 20 px de dist) on enleve la tactique
+                                        reduceResizeTactic(newAnalysisData.viewID, activity, view, newAnalysisData, sizeJump)
+                                        Log.d("info", " checkResizeTactic : REDUCE TACTIC ")
+                                        false
+                                    } else {
+                                        // On amplifie la tactic car on se dit que c'était surement pas assez pour avoir un impact
+                                        Log.d("info", " checkResizeTactic : AMPLIFY TACTIC ${true}")
+                                        true
+                                    }
+                                } else {
+                                    // Apply tactic car la view est dans son état initial
+                                    Log.d("info", " checkResizeTactic : APPLY TACTIC ${true}")
+                                    return true
+                                }
+                            }
+
+                        } else {
+                            // If there isn't any old data than it's the first time we need to apply tactic if error ratio > 0.1
+                            Log.d("info", " checkResizeTactic : APPLY TACTIC : ${newAnalysisData.errorRatio > thresholdRatio && newAnalysisData.averageDistFromBorder > thresholdDist} ")
+                        }
+
+                    } else {
+                        Log.d("info", "checkResizeTactic : MAX SIZE OF VIEW ${newAnalysisData.viewID} IN ACTIVITY ${newAnalysisData.viewLocal} ")
+                    }
+
+                } else {
+                    Log.d("info", "checkResizeTactic : NULL BASE WIDTH OR HEIGHT OF VIEW ${newAnalysisData.viewID} IN ACTIVITY ${newAnalysisData.viewLocal} ")
+                }
+
+            } else {
+                Log.d("info", "checkResizeTactic : NO DATA ON VIEW ${newAnalysisData.viewID} IN ACTIVITY ${newAnalysisData.viewLocal} ")
+            }
+        } else {
+            Log.d("info", "checkResizeTactic : VIEW ${newAnalysisData.viewID} IN ACTIVITY ${newAnalysisData.viewLocal} DOESN'T HAVE A FIXED SIZE ")
+        }
+        return false
+    }
+
+    private fun reduceResizeTactic(viewID : String, activity : Activity, view : View, newAnalysisData: SkAnalysisData, sizeJump : Int){
+
+        val db =  DatabaseHelper(activity.baseContext)
+        val data = db.getTacticsDataOfView(newAnalysisData.viewID, newAnalysisData.viewLocal)
+
+        if(data != null){
+            val width = data.viewWidth
+            val height = data.viewHeight
+
+
+            val params = view.layoutParams
+            params.width  = width - sizeJump
+            params.height = height - sizeJump
+            view.layoutParams = params
+
+            val newData = SkTacticsData(viewID, activity.localClassName, data.color, data.paddingStart, data.paddingEnd, data.paddingTop, data.paddingBottom, data.oldPaddingStart, data.oldPaddingEnd, data.oldPaddingTop, data.oldPaddingBottom, width - sizeJump, height - sizeJump)
+            db.saveTacticsData(newData)
+
+            Log.d("info", " reduceResizeTactic : REDUCE TACTIC ")
+        } else {
+            Log.d("info", " reduceResizeTactic : IMPOSSIBLE TO REDUCE TACTIC, ERROR GETTING CURRENT VIEW SIZE")
+        }
+        db.close()
     }
 
     private fun applyGravityCenterTactic(activity: Activity, newAnalysisData: SkAnalysisData, oldAnalysisData: SkAnalysisData?){
@@ -405,14 +572,8 @@ class SkInit {
         val viewsData = db.getViewsDataOfActivity(activity.localClassName)
         val tactic = db.getTacticsDataOfView(viewID, activity.localClassName)
 
-        val lp = view.layoutParams
-        val isWrapContent = (lp.height == ViewGroup.LayoutParams.WRAP_CONTENT || lp.width == ViewGroup.LayoutParams.WRAP_CONTENT)
-        val isMatchParent = (lp.height == ViewGroup.LayoutParams.MATCH_PARENT || lp.width == ViewGroup.LayoutParams.MATCH_PARENT)
-        val isFillParent = (lp.height == ViewGroup.LayoutParams.FILL_PARENT || lp.width == ViewGroup.LayoutParams.FILL_PARENT)
-
-
         // view need to have a fixed size
-        if(!isWrapContent && !isMatchParent && !isFillParent){
+        if(isFixedSize(view)){
             // If condition for applying tactics are met
             if(checkGravityCenterTactic(view, activity, newAnalysisData, oldAnalysisData)){
 
@@ -426,21 +587,27 @@ class SkInit {
 
                     if(centerOfView != null){
 
-                        var paddingStart : Int
-                        var paddingEnd: Int
-                        var paddingTop: Int
-                        var paddingBottom: Int
+                        val paddingStart : Int
+                        val paddingEnd: Int
+                        val paddingTop: Int
+                        val paddingBottom: Int
+                        val width : Int
+                        val height : Int
 
                         if(tactic == null){
                             paddingStart = view.paddingStart
                             paddingEnd = view.paddingEnd
                             paddingTop = view.paddingTop
                             paddingBottom = view.paddingBottom
+                            width = view.width
+                            height = view.height
                         } else {
                             paddingStart = tactic.paddingStart
                             paddingEnd = tactic.paddingEnd
                             paddingTop = tactic.paddingTop
                             paddingBottom = tactic.paddingBottom
+                            width = tactic.viewWidth
+                            height = tactic.viewHeight
                         }
 
                         var newPS = paddingStart
@@ -479,11 +646,12 @@ class SkInit {
                             }
                         }
 
+
                         view.setPadding(newPS, newPT, newPE, newPB)
-                        val tacticsData = SkTacticsData(viewID, activity.localClassName, getViewColor(view), newPS, newPE, newPT, newPB, paddingStart, paddingEnd, paddingTop, paddingBottom)
+                        val tacticsData = SkTacticsData(viewID, activity.localClassName, getViewColor(view), newPS, newPE, newPT, newPB, paddingStart, paddingEnd, paddingTop, paddingBottom, width, height)
                         db.saveTacticsData(tacticsData)
 
-                        Log.d("info", " Apply Color Contrast Tactic : SUCCESSFUL ")
+                        Log.d("info", " Apply Gravity Center Tactic : SUCCESSFUL ")
 
                     } else {
                         Log.d("info", " Apply Color Contrast Tactic : ERROR WHILE GETTING VIEW CENTER ")
@@ -521,7 +689,7 @@ class SkInit {
             } else {
                 // Tactics doesn't works
                 // If the gravity center is way worse than before last correction, get back to last correction
-                return if(oldDistGravityCenter + 20 <= distGravityCenter){
+                return if(distGravityCenter + 20 <= oldDistGravityCenter){
 
                     reduceGravityCenterTactic(newAnalysisData.viewID, activity, view, newAnalysisData)
 
@@ -554,17 +722,24 @@ class SkInit {
             val padB = data.oldPaddingBottom
 
             view.setPadding(padS, padT, padE, padB)
-            val newData = SkTacticsData(viewID, activity.localClassName, data.color, padS, padE, padT, padB, data.paddingStart, data.paddingEnd, data.paddingTop, data.paddingBottom)
+            val newData = SkTacticsData(viewID, activity.localClassName, data.color, padS, padE, padT, padB, data.paddingStart, data.paddingEnd, data.paddingTop, data.paddingBottom, data.viewWidth, data.viewHeight)
             db.saveTacticsData(newData)
 
             Log.d("info", " checkGravityCenterTactic : REDUCE TACTIC ")
         } else {
-
             Log.d("info", " checkGravityCenterTactic : IMPOSSIBLE TO REDUCE TACTIC, ERROR GETTING OLD VIEW PADDINGS")
         }
         db.close()
     }
 
+    private fun isFixedSize(view: View) : Boolean{
+        val lp = view.layoutParams
+        val isWrapContent = (lp.height == ViewGroup.LayoutParams.WRAP_CONTENT || lp.width == ViewGroup.LayoutParams.WRAP_CONTENT)
+        val isMatchParent = (lp.height == ViewGroup.LayoutParams.MATCH_PARENT || lp.width == ViewGroup.LayoutParams.MATCH_PARENT)
+        val isFillParent = (lp.height == ViewGroup.LayoutParams.FILL_PARENT || lp.width == ViewGroup.LayoutParams.FILL_PARENT)
+
+        return !isWrapContent && !isMatchParent && !isFillParent
+    }
 
     // -------------------- ANALYSE DATA
 

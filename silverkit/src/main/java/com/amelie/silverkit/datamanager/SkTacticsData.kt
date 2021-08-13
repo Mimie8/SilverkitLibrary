@@ -13,9 +13,11 @@ class SkTacticsData {
     var oldPaddingEnd : Int = 0
     var oldPaddingTop : Int = 0
     var oldPaddingBottom : Int = 0
+    var viewWidth : Int = 0
+    var viewHeight : Int = 0
 
     constructor()
-    constructor(viewID: String, viewLocal: String, color: Int?, paddingStart: Int, paddingEnd: Int, paddingTop : Int, paddingBottom : Int, oldPaddingStart: Int, oldPaddingEnd: Int, oldPaddingTop : Int, oldPaddingBottom : Int){
+    constructor(viewID: String, viewLocal: String, color: Int?, paddingStart: Int, paddingEnd: Int, paddingTop : Int, paddingBottom : Int, oldPaddingStart: Int, oldPaddingEnd: Int, oldPaddingTop : Int, oldPaddingBottom : Int, viewWidth : Int, viewHeight : Int){
         this.viewID = viewID
         this.viewLocal = viewLocal
         this.color = color
@@ -27,10 +29,12 @@ class SkTacticsData {
         this.oldPaddingEnd = oldPaddingEnd
         this.oldPaddingTop = oldPaddingTop
         this.oldPaddingBottom = oldPaddingBottom
+        this.viewWidth = viewWidth
+        this.viewHeight = viewHeight
     }
 
     override fun toString(): String {
-        return "SkClicksData(viewID=$viewID, viewLocal=$viewLocal, color=$color, paddingStart=$paddingStart, paddingEnd=$paddingEnd, paddingTop=$paddingTop, paddingBottom = $paddingBottom, oldPaddingStart=$oldPaddingStart, oldPaddingEnd=$oldPaddingEnd, oldPaddingTop=$oldPaddingTop, oldPaddingBottom=$oldPaddingBottom)"
+        return "SkClicksData(viewID=$viewID, viewLocal=$viewLocal, color=$color, paddingStart=$paddingStart, paddingEnd=$paddingEnd, paddingTop=$paddingTop, paddingBottom = $paddingBottom, oldPaddingStart=$oldPaddingStart, oldPaddingEnd=$oldPaddingEnd, oldPaddingTop=$oldPaddingTop, oldPaddingBottom=$oldPaddingBottom, viewWidth=$viewWidth, viewHeight=$viewHeight)"
     }
 
 }
