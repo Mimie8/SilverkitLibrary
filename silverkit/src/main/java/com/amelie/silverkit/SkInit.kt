@@ -351,6 +351,7 @@ class SkInit {
 
         val db =  DatabaseHelper(activity.baseContext)
 
+
         val newColor : Int
         if(lighten){
             newColor = lightenColor(viewColor, 10f)
@@ -362,7 +363,29 @@ class SkInit {
 
         view.setBackgroundColor(newColor)
 
-        val data = SkTacticsData(viewID, activity.localClassName, newColor, view.paddingStart, view.paddingEnd, view.paddingTop, view.paddingBottom)
+        val tacticsData = db.getTacticsDataOfView(viewID, activity.localClassName)
+        var padS = view.paddingStart
+        var padE = view.paddingEnd
+        var padT = view.paddingTop
+        var padB = view.paddingBottom
+        var oPadS = 0
+        var oPadE = 0
+        var oPadT = 0
+        var oPadB = 0
+
+        if(tacticsData != null){
+            padS = tacticsData.paddingStart!!
+            padE = tacticsData.paddingEnd!!
+            padT = tacticsData.paddingTop!!
+            padB = tacticsData.paddingBottom!!
+
+            oPadS = tacticsData.oldPaddingStart!!
+            oPadE = tacticsData.oldPaddingEnd!!
+            oPadT = tacticsData.oldPaddingTop!!
+            oPadB = tacticsData.oldPaddingBottom!!
+        }
+
+        val data = SkTacticsData(viewID, activity.localClassName, newColor, padS, padE, padT, padB, oPadS, oPadE, oPadT, oPadB)
         db.saveTacticsData(data)
         db.close()
 
@@ -390,7 +413,7 @@ class SkInit {
         // view need to have a fixed size
         if(!isWrapContent && !isMatchParent && !isFillParent){
             // If condition for applying tactics are met
-            if(checkGravityCenterTactic(newAnalysisData, oldAnalysisData)){
+            if(checkGravityCenterTactic(view, activity, newAnalysisData, oldAnalysisData)){
 
                 val gravityCenterX = newAnalysisData.gravityCenterX
                 val gravityCenterY = newAnalysisData.gravityCenterY
@@ -408,27 +431,27 @@ class SkInit {
 
                         if(gravityCenterX < centerOfView[0]){
                             // left : move right
-                            paddingStart += 2
+                            paddingStart += 4
                             Log.d("info", " Apply Color Contrast Tactic : MOVE RIGHT ")
                         }
                         if(gravityCenterX > centerOfView[0]){
                             // right : move left
-                            paddingEnd += 2
+                            paddingEnd += 4
                             Log.d("info", " Apply Color Contrast Tactic : MOVE LEFT ")
                         }
                         if(gravityCenterY < centerOfView[1]){
                             // top : move bottom
-                            paddingTop += 2
+                            paddingTop += 4
                             Log.d("info", " Apply Color Contrast Tactic : MOVE BOTTOM ")
                         }
                         if(gravityCenterY > centerOfView[1]){
                             // bottom : move top
-                            paddingBottom += 2
+                            paddingBottom += 4
                             Log.d("info", " Apply Color Contrast Tactic : MOVE TOP ")
                         }
 
                         view.setPadding(paddingStart, paddingTop, paddingEnd, paddingBottom)
-                        val tacticsData = SkTacticsData(viewID, activity.localClassName, getViewColor(view), paddingStart, paddingEnd, paddingTop, paddingBottom)
+                        val tacticsData = SkTacticsData(viewID, activity.localClassName, getViewColor(view), paddingStart, paddingEnd, paddingTop, paddingBottom, view.paddingStart, view.paddingEnd, view.paddingTop, view.paddingBottom)
                         db.saveTacticsData(tacticsData)
 
                         Log.d("info", " Apply Color Contrast Tactic : SUCCESSFUL ")
@@ -451,7 +474,7 @@ class SkInit {
         db.close()
     }
 
-    private fun checkGravityCenterTactic(newAnalysisData: SkAnalysisData, oldAnalysisData: SkAnalysisData?): Boolean{
+    private fun checkGravityCenterTactic(view:View, activity : Activity, newAnalysisData: SkAnalysisData, oldAnalysisData: SkAnalysisData?): Boolean{
 
         val distGravityCenter = newAnalysisData.distGravityCenter
 
@@ -470,7 +493,9 @@ class SkInit {
                 // Tactics doesn't works
                 // If the gravity center is way worse than before last correction, get back to last correction
                 return if(oldDistGravityCenter + 20 <= distGravityCenter){
-                    Log.d("info", " checkGravityCenterTactic : REDUCE TACTIC ")
+
+                    reduceGravityCenterTactic(newAnalysisData.viewID, activity, view, newAnalysisData)
+                    
                     false
                 } else {
                     // On amplifie la tactic car on se dit que c'était surement pas assez pour avoir un impact
@@ -485,6 +510,30 @@ class SkInit {
             Log.d("info", " checkGravityCenterTactic : APPLY TACTIC : ${distGravityCenter > 15} ")
             return distGravityCenter > 15
         }
+
+    }
+
+    private fun reduceGravityCenterTactic(viewID : String, activity: Activity, view:View, newAnalysisData: SkAnalysisData){
+        val db =  DatabaseHelper(activity.baseContext)
+
+        val data = db.getTacticsDataOfView(newAnalysisData.viewID, newAnalysisData.viewLocal)
+
+        if(data != null){
+            val padS = data.oldPaddingStart
+            val padE = data.oldPaddingEnd
+            val padT = data.oldPaddingTop
+            val padB = data.oldPaddingBottom
+
+            view.setPadding(padS, padT, padE, padB)
+            val newData = SkTacticsData(viewID, activity.localClassName, data.color, padS, padE, padT, padB, data.paddingStart, data.paddingEnd, data.paddingTop, data.paddingBottom)
+            db.saveTacticsData(newData)
+
+            Log.d("info", " checkGravityCenterTactic : REDUCE TACTIC ")
+        } else {
+
+            Log.d("info", " checkGravityCenterTactic : IMPOSSIBLE TO REDUCE TACTIC, ERROR GETTING OLD VIEW PADDINGS")
+        }
+        db.close()
     }
 
 

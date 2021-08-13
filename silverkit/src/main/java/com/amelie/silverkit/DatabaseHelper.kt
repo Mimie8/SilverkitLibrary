@@ -55,6 +55,10 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
         const val C_PADDING_END = "PADDING_END"
         const val C_PADDING_TOP = "PADDING_TOP"
         const val C_PADDING_BOTTOM = "PADDING_BOTTOM"
+        const val C_OLD_PADDING_START = "OLD_PADDING_START"
+        const val C_OLD_PADDING_END = "OLD_PADDING_END"
+        const val C_OLD_PADDING_TOP = "OLD_PADDING_TOP"
+        const val C_OLD_PADDING_BOTTOM = "OLD_PADDING_BOTTOM"
     }
 
     // This is called the first time a database is accessed. There should be code in there to create a new db
@@ -64,7 +68,7 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
         val createViewDataTable = "CREATE TABLE $T_VIEW_DATA ($C_VIEW_DATA_ID INTEGER PRIMARY KEY AUTOINCREMENT, $C_VIEW_ID TEXT, $C_VIEW_ACTIVTY TEXT, $C_TOPLEFT_X INT, $C_TOPLEFT_Y INT, $C_BOTTOMRIGHT_X INT, $C_BOTTOMRIGHT_Y INT, $C_BASE_COLOR INT, $C_BASE_SIZE_WIDTH INT, $C_BASE_SIZE_HEIGHT INT)"
         val createDeviceDataTable = "CREATE TABLE $T_DEVICE_DATA ($C_DEVICE_DATA_ID INTEGER PRIMARY KEY AUTOINCREMENT, $C_SCREEN_WIDTH INT, $C_SCREEN_HEIGHT INT, $C_CORRECTIONS_TIMESTAMP TEXT)"
         val createAnalysisDataTable = "CREATE TABLE $T_ANALYSIS_DATA ($C_ANALYSIS_DATA_ID INTEGER PRIMARY KEY AUTOINCREMENT, $C_VIEW_ID TEXT, $C_VIEW_ACTIVTY TEXT, $C_ERROR_RATIO TEXT, $C_AVERAGE_DIST_FROM_BORDER TEXT, $C_DIST_GRAVITY_CENTER TEXT, $C_GRAVITY_CENTER_X INT, $C_GRAVITY_CENTER_Y INT)"
-        val createTacticsDataTable = "CREATE TABLE $T_TACTICS_DATA ($C_TACTICS_DATA_ID INTEGER PRIMARY KEY AUTOINCREMENT, $C_VIEW_ID TEXT, $C_VIEW_ACTIVTY TEXT, $C_VIEW_COLOR INT, $C_PADDING_START INT, $C_PADDING_END INT, $C_PADDING_TOP INT, $C_PADDING_BOTTOM INT)"
+        val createTacticsDataTable = "CREATE TABLE $T_TACTICS_DATA ($C_TACTICS_DATA_ID INTEGER PRIMARY KEY AUTOINCREMENT, $C_VIEW_ID TEXT, $C_VIEW_ACTIVTY TEXT, $C_VIEW_COLOR INT, $C_PADDING_START INT, $C_PADDING_END INT, $C_PADDING_TOP INT, $C_PADDING_BOTTOM INT, $C_OLD_PADDING_START INT, $C_OLD_PADDING_END INT, $C_OLD_PADDING_TOP INT, $C_OLD_PADDING_BOTTOM INT)"
 
 
         db.execSQL(createClickEventTable)
@@ -470,6 +474,10 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
         cv.put(C_PADDING_END, data.paddingEnd)
         cv.put(C_PADDING_TOP, data.paddingTop)
         cv.put(C_PADDING_BOTTOM, data.paddingBottom)
+        cv.put(C_OLD_PADDING_START, data.oldPaddingStart)
+        cv.put(C_OLD_PADDING_END, data.oldPaddingEnd)
+        cv.put(C_OLD_PADDING_TOP, data.oldPaddingTop)
+        cv.put(C_OLD_PADDING_BOTTOM, data.oldPaddingBottom)
 
         val result = db.insert(T_TACTICS_DATA, null, cv)
         db.close()
@@ -491,6 +499,10 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
         cv.put(C_PADDING_END, data.paddingEnd)
         cv.put(C_PADDING_TOP, data.paddingTop)
         cv.put(C_PADDING_BOTTOM, data.paddingBottom)
+        cv.put(C_OLD_PADDING_START, data.oldPaddingStart)
+        cv.put(C_OLD_PADDING_END, data.oldPaddingEnd)
+        cv.put(C_OLD_PADDING_TOP, data.oldPaddingTop)
+        cv.put(C_OLD_PADDING_BOTTOM, data.oldPaddingBottom)
 
         val where = "id=?"
         val whereArgs = arrayOf(java.lang.String.valueOf(id))
@@ -545,8 +557,12 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
                         val paddingEnd = cursor.getInt(5)
                         val paddingTop = cursor.getInt(6)
                         val paddingBottom = cursor.getInt(7)
+                        val oldPaddingStart = cursor.getInt(8)
+                        val oldPaddingEnd = cursor.getInt(9)
+                        val oldPaddingTop = cursor.getInt(10)
+                        val oldPaddingBottom = cursor.getInt(11)
 
-                        val data = SkTacticsData(viewID, viewActivity, color, paddingStart, paddingEnd, paddingTop, paddingBottom)
+                        val data = SkTacticsData(viewID, viewActivity, color, paddingStart, paddingEnd, paddingTop, paddingBottom, oldPaddingStart, oldPaddingEnd, oldPaddingTop,oldPaddingBottom)
                         tacticsData.add(data)
                     }
                 }
@@ -557,6 +573,35 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
         } catch (e: Exception){
             db.close()
             return mutableListOf()
+        }
+    }
+
+    fun getTacticsDataOfView(viewID: String, activity:String): SkTacticsData?{
+        val db = this.readableDatabase
+        val query = "SELECT * FROM $T_TACTICS_DATA WHERE $C_VIEW_ACTIVTY = \'$activity\' AND $C_VIEW_ID = \'$viewID\'"
+
+        val cursor = db.rawQuery(query, null)
+        return if(cursor.moveToFirst()){
+            val id = cursor.getString(1)
+            val viewActivity = cursor.getString(2)
+            val color = cursor.getInt(3)
+            val paddingStart = cursor.getInt(4)
+            val paddingEnd = cursor.getInt(5)
+            val paddingTop = cursor.getInt(6)
+            val paddingBottom = cursor.getInt(7)
+            val oldPaddingStart = cursor.getInt(8)
+            val oldPaddingEnd = cursor.getInt(9)
+            val oldPaddingTop = cursor.getInt(10)
+            val oldPaddingBottom = cursor.getInt(11)
+
+            val data = SkTacticsData(id, viewActivity, color, paddingStart, paddingEnd, paddingTop, paddingBottom, oldPaddingStart, oldPaddingEnd, oldPaddingTop,oldPaddingBottom)
+            cursor.close()
+            db.close()
+            data
+        } else {
+            cursor.close()
+            db.close()
+            null
         }
     }
 
