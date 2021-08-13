@@ -90,6 +90,7 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
         cv.put(C_TIMESTAMP, click_data.timestamp.toString())
 
         val result = db.insert(T_CLICK_EVENTS, null, cv)
+        db.close()
 
         return if(result == -1L){
             Log.d("info", "DATABASE SK : ERROR WHILE SAVING THE CLICK DATA")
@@ -120,6 +121,7 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
             cv.put(C_BASE_SIZE_HEIGHT, view_data.baseSizeHeight)
 
             val result = db.insert(T_VIEW_DATA, null, cv)
+            db.close()
 
             return if(result == -1L){
                 Log.d("info", "DATABASE SK : ERROR WHILE SAVING THE VIEW DATA")
@@ -147,6 +149,7 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
         cv.put(C_CORRECTIONS_TIMESTAMP, last_corrections)
 
         val result = db.insert(T_DEVICE_DATA, null, cv)
+        db.close()
 
         return if(result == -1L){
             Log.d("info", "DATABASE SK : ERROR WHILE SAVING THE DEVICE DATA")
@@ -167,9 +170,11 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
         val cursor = db.rawQuery(query, null)
         if (cursor.count <= 0) {
             cursor.close()
+            db.close()
             return false
         }
         cursor.close()
+        db.close()
         return true
     }
 
@@ -200,9 +205,11 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
 
         return try{
             db.update(T_ANALYSIS_DATA, cv, where, whereArgs)
+            db.close()
             Log.d("info", "DATABASE SK : SUCCESSFULLY UPDATED THE ANALYSIS DATA OF ${analysisData.viewID}")
             true
         } catch (e: Exception){
+            db.close()
             Log.d("info", "DATABASE SK : ERROR WHILE UPDATING THE ANALYSIS DATA OF ${analysisData.viewID}")
             false
         }
@@ -219,6 +226,7 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
         cv.put(C_DIST_GRAVITY_CENTER, roundTo2Decimal(analysisData.distGravityCenter))
 
         val result = db.insert(T_ANALYSIS_DATA, null, cv)
+        db.close()
 
         return if(result == -1L){
             Log.d("info", "DATABASE SK : ERROR WHILE SAVING THE ANALYSIS DATA OF ${analysisData.viewID}")
@@ -242,9 +250,11 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
         return if(cursor.moveToFirst()){
             val id = cursor.getInt(0)
             cursor.close()
+            db.close()
             id
         } else {
             cursor.close()
+            db.close()
             -1
         }
     }
@@ -255,10 +265,10 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
         return true
     }
 
-    fun getClicksDataSinceLastAnalysis(lastCorrectionTimestamp : String) : MutableList<SkClicksData> {
+    fun getClicksDataOfActivity(activity : String, lastCorrectionTimestamp : String) : MutableList<SkClicksData> {
         val db = this.readableDatabase
         
-        val query = "SELECT * FROM $T_CLICK_EVENTS WHERE $C_TIMESTAMP > \'$lastCorrectionTimestamp\'"
+        val query = "SELECT * FROM $T_CLICK_EVENTS WHERE $C_TIMESTAMP > \'$lastCorrectionTimestamp\' AND $C_VIEW_ACTIVTY = '$activity'"
 
         val clicksData = mutableListOf<SkClicksData>()
 
@@ -280,15 +290,17 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
                 }
                 cursor.close() // close your cursor when you don't need it anymore
             }
+            db.close()
             return clicksData
         } catch (e: Exception){
+            db.close()
             return mutableListOf()
         }
     }
 
-    fun getViewsData() : MutableList<SkCoordsData>{
+    fun getViewsDataOfActivity(activity: String) : MutableList<SkCoordsData>{
         val db = this.readableDatabase
-        val query = "SELECT * FROM $T_VIEW_DATA"
+        val query = "SELECT * FROM $T_VIEW_DATA WHERE $C_VIEW_ACTIVTY = \'$activity\'"
 
         val viewsData = mutableListOf<SkCoordsData>()
 
@@ -313,8 +325,10 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
                 }
                 cursor.close() // close your cursor when you don't need it anymore
             }
+            db.close()
             return viewsData
         } catch (e: Exception){
+            db.close()
             return mutableListOf()
         }
     }
@@ -330,43 +344,45 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
                 val height = cursor.getInt(2)
                 val correctionTimestamp = cursor.getString(3)
                 cursor.close()
+                db.close()
                 listOf(width, height, correctionTimestamp)
             } else {
                 cursor.close()
+                db.close()
                 listOf()
             }
         } catch (e: Exception){
+            db.close()
             listOf()
         }
     }
 
-    fun getAnalysisData(activity: String):List<SkAnalysisData>{
+    fun getAnalysisData(viewID: String, activity: String):SkAnalysisData?{
         val db = this.readableDatabase
-        val query = "SELECT * FROM $T_ANALYSIS_DATA WHERE $C_VIEW_ACTIVTY = \'$activity\'"
+        val query = "SELECT * FROM $T_ANALYSIS_DATA WHERE $C_VIEW_ACTIVTY = \'$activity\' AND $C_VIEW_ID = \'$viewID\'"
 
-        val analysisData = mutableListOf<SkAnalysisData>()
-
-        try{
+        return try{
             val cursor = db.rawQuery(query, null)
-            if (cursor != null) {
-                if (cursor.count > 0) {
-                    while (cursor.moveToNext()) {
-                        val viewID = cursor.getString(1)
-                        val viewActivity = cursor.getString(2)
-                        val errorRatio = cursor.getString(3)
-                        val averageDistFromBorder = cursor.getString(4)
-                        val distGravityCenter = cursor.getString(5)
+            if(cursor.moveToFirst()){
+                val viewid = cursor.getString(1)
+                val viewActivity = cursor.getString(2)
+                val errorRatio = cursor.getString(3)
+                val averageDistFromBorder = cursor.getString(4)
+                val distGravityCenter = cursor.getString(5)
 
-                        val data = SkAnalysisData(viewID, viewActivity, errorRatio.toFloat(), averageDistFromBorder.toFloat(), distGravityCenter.toFloat())
-                        analysisData.add(data)
-                    }
-                }
-                cursor.close() // close your cursor when you don't need it anymore
+                cursor.close()
+                db.close()
+                SkAnalysisData(viewid, viewActivity, errorRatio.toFloat(), averageDistFromBorder.toFloat(), distGravityCenter.toFloat())
+            } else {
+                cursor.close()
+                db.close()
+                null
             }
-            return analysisData
         } catch (e: Exception){
-            return mutableListOf()
+            db.close()
+            null
         }
+
     }
 
     fun updateLastCorrectionTimestamp(newTimestamp : String) : Boolean{
@@ -379,9 +395,11 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
 
         return try{
             db.update(T_DEVICE_DATA, cv, where, whereArgs)
+            db.close()
             Log.d("info", "DATABASE SK : SUCCESSFULLY UPDATED THE LAST CORRECTION TIMESTAMP")
             true
         } catch (e: Exception){
+            db.close()
             Log.d("info", "DATABASE SK : ERROR WHILE UPDATING THE LAST CORRECTION TIMESTAMP")
             false
         }
@@ -396,12 +414,15 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
             if(cursor.moveToFirst()){
                 val color = cursor.getInt(7)
                 cursor.close()
+                db.close()
                 color
             } else {
                 cursor.close()
+                db.close()
                 null
             }
         } catch (e: Exception){
+            db.close()
             null
         }
     }

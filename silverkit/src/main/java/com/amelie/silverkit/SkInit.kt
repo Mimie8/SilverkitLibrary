@@ -49,49 +49,94 @@ class SkInit {
     fun applyCorrections(activity: Activity){
 
         val context = activity.baseContext
+        val activityStr = activity.localClassName
         val dbHelper =  DatabaseHelper(context)
 
         val deviceData = dbHelper.getDeviceData()
 
+        // Get views of this activity
+        val viewsData = dbHelper.getViewsDataOfActivity(activityStr)
+
+        // Get clicks data done since last correction in this activity
+        val lastCorrectionTimestamp = deviceData[2] as String
+        val clicks = dbHelper.getClicksDataOfActivity(activityStr, lastCorrectionTimestamp)
+
         // Look if it's time to analyse
         if(dbHelper.isAnalysisTime()){
 
-            // Get clicks data done since last correction
-            val lastCorrectionTimestamp = deviceData[2] as String
-            val clicks = dbHelper.getClicksDataSinceLastAnalysis(lastCorrectionTimestamp)
+            Log.d("info", "applyCorrections : ANALYSING DATA ... ")
 
-            // At least 10 clicks from last analyse to analyse data
-            if(clicks.size > 10){
-                Log.d("info", "applyCorrections : ANALYSING DATA ... ")
+            if(viewsData.isNotEmpty()){
 
-                // Analyse data, save to bd and return old analysis data to compare
-                val oldAnalysisData = analyseData(dbHelper, activity, clicks, deviceData)
+                if(clicks.isNotEmpty()) {
 
-                //Get new analysis data
-                val newAnalysisData = dbHelper.getAnalysisData(activity.localClassName)
+                    // Get all sk views in activity
+                    for (view in viewsData) {
 
-                // Apply tactics if necessary
-                applyTactics(dbHelper, activity, oldAnalysisData, newAnalysisData)
+                        val viewDelimitations = viewDelimitations(view.viewID, view.viewLocal, viewsData)
+                        val maxDistance = getMaxDistance(deviceData)
+                        val centerOfView = centerOfView(viewDelimitations)
+
+                        if (viewDelimitations != null && maxDistance != null && centerOfView != null) {
+
+                            val clicksOnView = clicksOnView(viewDelimitations, clicks)
+                            val clicksAroundView = clicksAroundView(viewDelimitations, maxDistance, clicks)
+
+                            // If at least 5 clicks were made on or around the view since last analyse
+                            if (clicksOnView.size + clicksAroundView.size >= 5) {
+
+                                // Analyse data, save to bd and return old analysis data to compare
+                                val oldAnalysisData = analyseViewData(dbHelper, view.viewID!!, activityStr, viewDelimitations, centerOfView, clicksOnView, clicksAroundView)
+
+                                //Get new analysis data
+                                val newAnalysisData = dbHelper.getAnalysisData(view.viewID!!, activityStr)
+
+                                // Apply tactics if necessary
+                                applyTactics(activity, oldAnalysisData, newAnalysisData)
+
+                            } else {
+                                Log.d(
+                                    "info",
+                                    "applyCorrections : NOT ENOUGH CLICKS ON VIEW ${view.viewID} IN ACTIVITY ${view.viewLocal} SINCE LAST ANALYSE TO ANALYSE "
+                                )
+                            }
+                        } else {
+                            Log.d("info", "applyCorrections : ERROR WHILE GETTING VIEW DELIMITATIONS, MAX DISTANCE FROM BORDER OR CENTER OF VIEW OF : VIEW ${view.viewID} IN ACTIVITY ${view.viewLocal}")
+                        }
+                    }
+
+                } else {
+                    Log.d("info", "applyCorrections : NO CLICKS DONE SINCE LAST ANALYSE ")
+                }
             } else {
-                Log.d("info", "applyCorrections : NOT ENOUGH CLICKS ON VIEW SINCE LAST ANALYSE TO ANALYSE ")
+                Log.d("info", "applyCorrections : NO SILVERKIT VIEWS IN THIS APP ")
             }
+
+            // Change last correction date in DB
+            val time = Timestamp(System.currentTimeMillis())
+            dbHelper.updateLastCorrectionTimestamp(time.toString())
+
+            Log.d("info", "applyCorrections : DATA ANALYSED ")
+
         }
+        dbHelper.close()
+
     }
 
     // -------------------- TACTICS
-    private fun applyTactics(dbHelper : DatabaseHelper, activity: Activity, oldAnalysisData : List<SkAnalysisData>, newAnalysisData : List<SkAnalysisData>){
+    private fun applyTactics(activity: Activity, oldAnalysisData : SkAnalysisData?, newAnalysisData : SkAnalysisData?){
 
         // See if it's necessary to apply tactics for the view, if yes apply tactics
-        for (data in newAnalysisData){
+        if(newAnalysisData != null){
 
-            val viewOldAnalysisData = getViewOldData(data.viewID, activity.localClassName, oldAnalysisData)
+            applyColorContrastTactic(activity, newAnalysisData, oldAnalysisData)
+            //applyResizeTactic(data)
+            //applyGravityCenterTactic(data)
 
-            applyColorContrastTactic(activity, data, viewOldAnalysisData)
-            applyResizeTactic(data)
-            applyGravityCenterTactic(data)
         }
     }
 
+    /*
     private fun getViewOldData(viewID: String, activity:String, oldAnalysisData:List<SkAnalysisData>):SkAnalysisData?{
 
         for(data in oldAnalysisData){
@@ -103,30 +148,37 @@ class SkInit {
 
     }
 
-    private fun applyColorContrastTactic(activity: Activity, viewAnalysisData: SkAnalysisData, viewOldAnalysisData: SkAnalysisData?){
+     */
 
-        val viewID = viewAnalysisData.viewID
+    private fun applyColorContrastTactic(activity: Activity, newAnalysisData: SkAnalysisData, oldAnalysisData: SkAnalysisData?){
+
+        val viewID = newAnalysisData.viewID
         val resourceID = activity.baseContext.resources.getIdentifier(viewID, "layout", activity.packageName)
         val view = activity.window?.decorView?.findViewById(resourceID) as View
 
+        // Get color of view
+        val viewColor = getViewColor(view)
+        Log.d("info", " viewColor : $viewColor ")
+
+        // Get color of the view behind
+        val viewBehindColor = getViewBehindColor(view)
+        Log.d("info", " viewBehindColor : $viewBehindColor ")
+
         // If condition is ok to apply the tactic, apply it
-        if(checkColorContrastTacticCdt(viewAnalysisData, viewOldAnalysisData, view, activity)){
-
-            // Get color of view
-            val viewColor = getViewColor(view)
-            Log.d("info", " viewColor : $viewColor ")
-
-            // Get color of the view behind
-            val viewBehindColor = getViewBehindColor(view)
-            Log.d("info", " viewBehindColor : $viewBehindColor ")
+        if(checkColorContrastTacticCdt(newAnalysisData, oldAnalysisData, view, viewColor, viewBehindColor, activity)){
 
             // Change brightness level of the view based and the view behind color
-            val result = changeBrightnessLevel(view, viewColor, viewBehindColor)
-            if(result){
-                Log.d("info", " Apply Color Contrast Tactic : SUCCESSFUL ")
+            if(viewColor != null){
+                val result = getBrightnessLevel(viewColor, viewBehindColor)
+
+                if(result != null){
+                    changeBrightnessLevel(view, viewColor, result)
+                    Log.d("info", " Apply Color Contrast Tactic : SUCCESSFUL ")
+                }
             } else {
-                Log.d("info", " Apply Color Contrast Tactic : ERROR ")
+                Log.d("info", " Apply Color Contrast Tactic : ERROR (NO BACKGROUND COLOR TO CHANGE) ")
             }
+
 
         } else {
             Log.d("info", " Apply Color Contrast Tactic : NOT NECESSARY ")
@@ -142,55 +194,63 @@ class SkInit {
      * if oldErrorRatio > newErrorRatio : tactic fonctionne , sinon fonctionne pas
      *
      */
-    private fun checkColorContrastTacticCdt(viewAnalysisData: SkAnalysisData, viewOldAnalysisData: SkAnalysisData?, view:View, activity: Activity) : Boolean{
+    private fun checkColorContrastTacticCdt(newAnalysisData: SkAnalysisData, oldAnalysisData: SkAnalysisData?, view:View, viewColor: Int?, viewBehindColor: Int?, activityStr: Activity) : Boolean{
 
-        if(viewOldAnalysisData != null){
+        if(oldAnalysisData != null){
             // If there is old data than compare to new
-            val oldRatio : Float = viewOldAnalysisData.errorRatio
-            val newRatio : Float = viewAnalysisData.errorRatio
-            val oldDistFromBorder : Float = viewOldAnalysisData.averageDistFromBorder
-            val newDistFromBorder : Float = viewAnalysisData.averageDistFromBorder
+            val oldRatio : Float = oldAnalysisData.errorRatio
+            val newRatio : Float = newAnalysisData.errorRatio
+            val oldDistFromBorder : Float = oldAnalysisData.averageDistFromBorder
+            val newDistFromBorder : Float = newAnalysisData.averageDistFromBorder
 
             Log.d("info", " checkColorContrastTacticCdt : oldRatio $oldRatio newRatio $newRatio oldDistFromBorder $oldDistFromBorder newDistFromBorder $newDistFromBorder")
 
             return if((oldRatio >= newRatio) || (oldDistFromBorder >= newDistFromBorder)){
                 // La tactique fonctionne
                 // Si newRatio > 0.1 on continue d'appliquer sinon on arrête d'appliquer la tactique
-                Log.d("info", " checkColorContrastTacticCdt : CONTINUE TO APPLY TACTIC : newRatio $newRatio ${newRatio > 0.1f} ")
+                Log.d("info", " checkColorContrastTacticCdt : CONTINUE TO APPLY TACTIC ${newRatio > 0.1f}")
                 newRatio > 0.1f
             } else {
                 // La tactique fonctionne pas et empire les résultats
                 if(oldRatio + 0.3f <= newRatio){
                     // Si les resultats empire plus d'un certains seuil (de 0.3 de ratio) on enleve la tactique
-                    removeColorContrastTactic(viewAnalysisData.viewID, view, activity)
+                    reduceColorContrastTactic(newAnalysisData.viewID, view, viewColor, viewBehindColor, activityStr)
                     Log.d("info", " checkColorContrastTacticCdt : REMOVE TACTIC ")
                     false
                 } else {
                     // On amplifie la tactic car on se dit que c'était surement pas assez pour avoir un impact
-                    Log.d("info", " checkColorContrastTacticCdt : CONTINUE TO APPLY TACTIC : ${true} ")
+                    Log.d("info", " checkColorContrastTacticCdt : CONTINUE TO APPLY TACTIC ${true}")
                     true
                 }
             }
 
         } else {
             // If there isn't any old data than it's the first time we need to apply tactic if error ratio > 0.1
-            Log.d("info", " checkColorContrastTacticCdt : APPLY TACTIC : ${viewAnalysisData.errorRatio > 0.1f} ")
-            return viewAnalysisData.errorRatio > 0.1f
+            Log.d("info", " checkColorContrastTacticCdt : APPLY TACTIC : ${newAnalysisData.errorRatio > 0.1f} ")
+            return newAnalysisData.errorRatio > 0.1f
         }
     }
 
-    private fun removeColorContrastTactic(viewID : String, view: View, viewActivity : Activity){
+    private fun reduceColorContrastTactic(viewID : String, view: View, viewColor: Int?, viewBehindColor: Int?, viewActivity : Activity){
         // Get basic color of view
         val context = viewActivity.baseContext
         val dbHelper =  DatabaseHelper(context)
 
-        val color = dbHelper.getViewBaseColor(viewID, viewActivity.localClassName)
-        Log.d("info", " Remove Color Contrast Tactic : VIEW $viewID BASE COLOR $color ")
+        val baseColor = dbHelper.getViewBaseColor(viewID, viewActivity.localClassName)
+        Log.d("info", " Remove Color Contrast Tactic : VIEW $viewID BASE COLOR $baseColor ")
 
-        // Apply basic color of view
-        if(color != null){
-            view.setBackgroundColor(color)
-            Log.d("info", " Remove Color Contrast Tactic : SET VIEW COLOR TO BASE COLOR ")
+        // Reduce tactics application if the view color isn't the base one
+        if(viewColor != null){
+
+            val result = getBrightnessLevel(viewColor, viewBehindColor)
+            if(result != null){
+                if(viewColor != baseColor){
+                    changeBrightnessLevel(view, viewColor, !result)
+                    Log.d("info", " Reduce Color Contrast Tactic : REDUCE COLOR TACTIC ")
+                } else {
+                    Log.d("info", " Reduce Color Contrast Tactic : VIEW HAS ITS BASIC COLOR AND TACTIC CANNOT BE REDUCED MORE ")
+                }
+            }
         } else {
             view.setBackgroundColor(Color.TRANSPARENT)
             Log.d("info", " Remove Color Contrast Tactic : SET VIEW COLOR TO TRANSPARENT COLOR ")
@@ -366,42 +426,40 @@ class SkInit {
     }
     */
 
-
-    private fun changeBrightnessLevel(view:View, viewColor: Int?, viewBehindColor:Int?) : Boolean {
+    /**
+     * return true if viewColor > viewBehindColor (lighten) else return false (darken)
+     */
+    private fun getBrightnessLevel(viewColor: Int, viewBehindColor:Int?) : Boolean? {
 
         var viewBColor = viewBehindColor
 
-        // If view has a background color
-        if(viewColor != null){
-            // If the view behind doesn't have a background color set it to white full opacity
-            if(viewBColor == null){
-                viewBColor = Color.WHITE
-            }
-            // Get brightness level of both views
-            val viewHSL = floatArrayOf(1f,1f,1f)
-            val viewBehindHSL = floatArrayOf(1f,1f,1f)
-            colorToHSL(viewColor, viewHSL)
-            colorToHSL(viewBColor, viewBehindHSL)
-            val viewL = viewHSL[2]
-            val viewBehindL = viewBehindHSL[2]
-
-            // If view behind brightness > view brightness : darkened the view, else : lightened the view
-            var newColor : Int? = null
-            if(viewL > viewBehindL){
-                // lighten
-                newColor = lightenColor(viewColor, 10f)
-            } else {
-                // darken
-                newColor = darkenColor(viewColor, 10f)
-            }
-
-            // Apply new color on view
-            view.setBackgroundColor(newColor)
-            Log.d("info", " Apply Color Contrast Tactic : NEW COLOR = $newColor ")
-
-            return true
+        // If the view behind doesn't have a background color set it to white full opacity
+        if(viewBColor == null){
+            viewBColor = Color.WHITE
         }
-        return false
+        // Get brightness level of both views
+        val viewHSL = floatArrayOf(1f,1f,1f)
+        val viewBehindHSL = floatArrayOf(1f,1f,1f)
+        colorToHSL(viewColor, viewHSL)
+        colorToHSL(viewBColor, viewBehindHSL)
+        val viewL = viewHSL[2]
+        val viewBehindL = viewBehindHSL[2]
+
+        // If view behind brightness > view brightness : darkened the view, else : lightened the view
+        return viewL > viewBehindL
+    }
+
+    private fun changeBrightnessLevel(view:View, viewColor: Int, lighten:Boolean){
+
+        val newColor : Int
+        if(lighten){
+            newColor = lightenColor(viewColor, 10f)
+            Log.d("info", " Apply Color Contrast Tactic : LIGHTEN COLOR = $newColor ")
+        } else {
+            newColor = darkenColor(viewColor, 10f)
+            Log.d("info", " Apply Color Contrast Tactic : DARKEN COLOR = $newColor ")
+        }
+        view.setBackgroundColor(newColor)
     }
 
     private fun applyResizeTactic(viewAnalysisData: SkAnalysisData){
@@ -414,6 +472,21 @@ class SkInit {
 
 
     // -------------------- ANALYSE DATA
+
+    private fun analyseViewData(db : DatabaseHelper, viewID : String, activityStr : String, viewDelimitations : List<Int>, centerOfView : List<Int>, clicksOnView : MutableList<SkClicksData>, clicksAroundView: MutableList<SkClicksData>) : SkAnalysisData?{
+
+        val errorRatio = getErrorRatio(clicksOnView, clicksAroundView)
+        val averageDistFromBorder = getAverageDistanceFromBorder(viewDelimitations, clicksAroundView)
+        val distGravityCenter = getDistGravityCenter(clicksOnView, clicksAroundView, centerOfView)
+
+        val newAnalysisData = SkAnalysisData(viewID, activityStr, errorRatio, averageDistFromBorder, distGravityCenter)
+        val oldAnalysisData = db.getAnalysisData(viewID, activityStr)
+
+        db.addAnalysisData(newAnalysisData)
+        return oldAnalysisData
+    }
+
+    /*
     /**
      * Recompute the analysis data for each view
      * Change last correction date
@@ -468,6 +541,7 @@ class SkInit {
         return null
 
     }
+    */
 
     private fun getErrorRatio(clicksOnView : MutableList<SkClicksData>, clicksAroundView : MutableList<SkClicksData>) : Float{
         // Compute error ratio
@@ -576,31 +650,38 @@ class SkInit {
         return result
     }
 
-    private fun viewDelimitations(viewID: String, activity: String, viewsData: MutableList<SkCoordsData>) : List<Int>{
+    private fun viewDelimitations(viewID: String?, activity: String?, viewsData: MutableList<SkCoordsData>) : List<Int>?{
 
-        for (views in viewsData){
-            if(viewID == views.viewID && activity == views.viewLocal){
-                return listOf(views.coordTL!![0], views.coordTL!![1], views.coordDR!![0], views.coordDR!![1])
+        if(viewID != null && activity != null){
+            for (views in viewsData){
+                if(viewID == views.viewID && activity == views.viewLocal){
+                    return listOf(views.coordTL!![0], views.coordTL!![1], views.coordDR!![0], views.coordDR!![1])
+                }
             }
         }
 
         Log.d("info", "viewDelimitations : ERROR WHILE GETTING VIEW DELIMITATION OF $viewID IN ACTIVITY $activity")
-        return listOf()
+        return null
 
     }
 
-    private fun getMaxDistance(deviceData: List<Any>) : Int {
+    private fun getMaxDistance(deviceData: List<Any>) : Int? {
 
-        val width : Int = deviceData[0] as Int
-        val height : Int = deviceData[1] as Int
+        try{
+            val width : Int = deviceData[0] as Int
+            val height : Int = deviceData[1] as Int
 
-        if(width < height){
-            return (width / 100) * 10
+            if(width < height){
+                return (width / 100) * 10
+            }
+            if (height >= width){
+                return (height / 100) * 10
+            }
+            return null
+        } catch (e:Exception){
+            return null
         }
-        if (height >= width){
-            return (height / 100) * 10
-        }
-        return 0
+
     }
 
     private fun clicksOnView(viewDelimitations : List<Int>, clicksData : MutableList<SkClicksData>) : MutableList<SkClicksData>{
@@ -653,17 +734,20 @@ class SkInit {
 
     }
 
-    private fun centerOfView(viewDelimitations : List<Int>) : List<Int>{
-        val tl_x = viewDelimitations[0]
-        val tl_y = viewDelimitations[1]
-        val dr_x = viewDelimitations[2]
-        val dr_y = viewDelimitations[3]
+    private fun centerOfView(viewDelimitations : List<Int>?) : List<Int>?{
 
-        val center_x = tl_x + ((dr_x-tl_x)/2)
-        val center_y = tl_y + ((dr_y - tl_y)/2)
+        if(viewDelimitations != null){
+            val tl_x = viewDelimitations[0]
+            val tl_y = viewDelimitations[1]
+            val dr_x = viewDelimitations[2]
+            val dr_y = viewDelimitations[3]
 
-        return listOf(center_x, center_y)
+            val center_x = tl_x + ((dr_x-tl_x)/2)
+            val center_y = tl_y + ((dr_y - tl_y)/2)
 
+            return listOf(center_x, center_y)
+        }
+        return null
     }
 
     private fun getSkViewsID(activity: Activity) : List<String>{
