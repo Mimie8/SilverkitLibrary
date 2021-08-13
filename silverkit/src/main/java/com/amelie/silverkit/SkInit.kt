@@ -496,6 +496,7 @@ class SkInit {
 
                     reduceGravityCenterTactic(newAnalysisData.viewID, activity, view, newAnalysisData)
 
+                    Log.d("info", " checkGravityCenterTactic : REDUCE TACTIC ")
                     false
                 } else {
                     // On amplifie la tactic car on se dit que c'était surement pas assez pour avoir un impact
@@ -510,7 +511,6 @@ class SkInit {
             Log.d("info", " checkGravityCenterTactic : APPLY TACTIC : ${distGravityCenter > 15} ")
             return distGravityCenter > 15
         }
-
     }
 
     private fun reduceGravityCenterTactic(viewID : String, activity: Activity, view:View, newAnalysisData: SkAnalysisData){
@@ -816,7 +816,7 @@ class SkInit {
         }
     }
 
-     private fun getAllChildren(v: View): List<View> {
+    private fun getAllChildren(v: View): List<View> {
         if (v !is ViewGroup) {
             return ArrayList()
         }

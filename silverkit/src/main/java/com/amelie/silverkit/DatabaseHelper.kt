@@ -286,7 +286,7 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
 
     fun getClicksDataOfActivity(activity : String, lastCorrectionTimestamp : String) : MutableList<SkClicksData> {
         val db = this.readableDatabase
-        
+
         val query = "SELECT * FROM $T_CLICK_EVENTS WHERE $C_TIMESTAMP > \'$lastCorrectionTimestamp\' AND $C_VIEW_ACTIVTY = '$activity'"
 
         val clicksData = mutableListOf<SkClicksData>()
