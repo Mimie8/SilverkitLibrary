@@ -17,10 +17,7 @@ import androidx.annotation.ColorInt
 import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.ColorUtils.HSLToColor
 import androidx.core.graphics.ColorUtils.colorToHSL
-import com.amelie.silverkit.datamanager.SkAnalysisData
-import com.amelie.silverkit.datamanager.SkClicksData
-import com.amelie.silverkit.datamanager.SkCoordsData
-import com.amelie.silverkit.datamanager.SkHardwareData
+import com.amelie.silverkit.datamanager.*
 import java.sql.Timestamp
 import kotlin.math.*
 
@@ -43,6 +40,46 @@ class SkInit {
             editor?.putBoolean("firstStart", false)
             editor?.apply()
         }
+
+        restoreTactics(activity)
+    }
+
+    private fun restoreTactics(activity: Activity){
+
+        val dbHelper =  DatabaseHelper(activity.baseContext)
+        val viewsData = dbHelper.getViewsDataOfActivity(activity.localClassName)
+        val tacticsData = dbHelper.getTacticsDataOfActivity(activity.localClassName)
+
+        for (view in viewsData){
+
+            val viewID = view.viewID
+            val resourceID = activity.baseContext.resources.getIdentifier(viewID, "layout", activity.packageName)
+            val viewElement = activity.window?.decorView?.findViewById(resourceID) as View
+
+            val index = tacticsData.indexOfFirst{
+                it.viewID == view.viewID && it.viewLocal == view.viewLocal
+            }
+            // The view has tactics information
+            if(index != -1){
+                // Restore the tactics on the view
+                val viewTactics = tacticsData[index]
+
+                val color = viewTactics.color
+                val padStart = viewTactics.paddingStart
+                val padEnd = viewTactics.paddingEnd
+                val padTop = viewTactics.paddingTop
+                val padBottom = viewTactics.paddingBottom
+
+                if(color != null){
+                    viewElement.setBackgroundColor(color)
+                }
+
+                if(padStart != null && padEnd != null && padTop != null && padBottom != null){
+                    viewElement.setPadding(padStart, padTop, padEnd, padBottom)
+                }
+            }
+        }
+
     }
 
 
@@ -91,7 +128,7 @@ class SkInit {
                                 //Get new analysis data
                                 val newAnalysisData = dbHelper.getAnalysisData(view.viewID!!, activityStr)
 
-                                // Apply tactics if necessary
+                                // Apply tactics if necessary and save tactic modification of each view in bd
                                 applyTactics(activity, oldAnalysisData, newAnalysisData)
 
                             } else {
@@ -136,25 +173,13 @@ class SkInit {
         }
     }
 
-    /*
-    private fun getViewOldData(viewID: String, activity:String, oldAnalysisData:List<SkAnalysisData>):SkAnalysisData?{
-
-        for(data in oldAnalysisData){
-            if(data.viewID == viewID && data.viewLocal == activity){
-                return data
-            }
-        }
-        return null
-
-    }
-
-     */
-
     private fun applyColorContrastTactic(activity: Activity, newAnalysisData: SkAnalysisData, oldAnalysisData: SkAnalysisData?){
 
         val viewID = newAnalysisData.viewID
         val resourceID = activity.baseContext.resources.getIdentifier(viewID, "layout", activity.packageName)
         val view = activity.window?.decorView?.findViewById(resourceID) as View
+
+        val db =  DatabaseHelper(activity.baseContext)
 
         // Get color of view
         val viewColor = getViewColor(view)
@@ -173,6 +198,8 @@ class SkInit {
 
                 if(result != null){
                     changeBrightnessLevel(view, viewColor, result)
+                    val data = SkTacticsData(newAnalysisData.viewID, newAnalysisData.viewLocal, viewColor, view.paddingStart, view.paddingEnd, view.paddingTop, view.paddingBottom)
+                    db.saveTacticsData(data)
                     Log.d("info", " Apply Color Contrast Tactic : SUCCESSFUL ")
                 }
             } else {
@@ -183,6 +210,7 @@ class SkInit {
         } else {
             Log.d("info", " Apply Color Contrast Tactic : NOT NECESSARY ")
         }
+        db.close()
     }
 
     // verifier si l'application de la tactique a améliorer les resultats depuis la dernire application
@@ -276,33 +304,13 @@ class SkInit {
 
     private fun getViewColor(view:View) : Int?{
 
-
         return try{
             val background = view.background as ColorDrawable
             return background.color
         } catch (e:Exception){
             null
         }
-        /*
-        val viewBackground = view.background
-        if (viewBackground is ColorDrawable){
-            return viewBackground.color
-            /*
-            val viewColorHex = java.lang.String.format("#%06X", 0xFFFFFF and viewColor)
-            val viewColorRGB = Color.parseColor(viewColorHex)
 
-            val red = Color.red(viewColor)
-            val blue = Color.blue(viewColor)
-            val green = Color.green(viewColor)
-            val viewColorOpacity = Color.alpha(viewColor)
-            val viewColorHSL = rgbToHsl(red, green, blue)
-
-            Log.d("info", "getViewColor HSLA: ${viewColorHSL[0]} ${viewColorHSL[1]} ${viewColorHSL[2]} $viewColorOpacity")
-            return listOf(viewColorHSL[0], viewColorHSL[1], viewColorHSL[2], viewColorOpacity.toDouble())
-            */
-        }
-        return null
-        */
     }
 
     private fun lightenColor(color: Int, value: Float): Int {
@@ -320,112 +328,6 @@ class SkInit {
         hsl[2] = max(0f, min(hsl[2], 1f))
         return HSLToColor(hsl)
     }
-
-    /*
-    /**
-     * Converts an HSL color value to RGB. Conversion formula
-     * adapted from http://en.wikipedia.org/wiki/HSL_color_space.
-     * Assumes h, s, and l are contained in the set [0, 1] and
-     * returns r, g, and b in the set [0, 255].
-     *
-     * @param   {number}  h       The hue
-     * @param   {number}  s       The saturation
-     * @param   {number}  l       The lightness
-     * @return  {Array}           The RGB representation
-     */
-    private fun hslToRgb(h : Double, s : Double, l : Double) : List<Double>{
-        val r : Double
-        val g : Double
-        val b : Double
-
-        if(s == (0).toDouble()){
-            // achromatic
-            r = l
-            g = l
-            b = l
-        }else{
-
-            val q = if(l < 0.5){
-                l * (1 + s)
-            } else {
-                l + s - l * s
-            }
-
-            val p = 2 * l - q
-
-            r = hue2rgb(p, q, h + 1/3)
-            g = hue2rgb(p, q, h)
-            b = hue2rgb(p, q, h - 1/3)
-        }
-
-        return listOf(Math.round(r * 255).toDouble(), Math.round(g * 255).toDouble(), Math.round(b * 255).toDouble())
-    }
-
-    /**
-     * Converts an RGB color value to HSL. Conversion formula
-     * adapted from http://en.wikipedia.org/wiki/HSL_color_space.
-     * Assumes r, g, and b are contained in the set [0, 255] and
-     * returns h, s, and l in the set [0, 1].
-     *
-     * @param   {number}  r       The red color value
-     * @param   {number}  g       The green color value
-     * @param   {number}  b       The blue color value
-     * @return  {Array}           The HSL representation
-     */
-    private fun rgbToHsl(r : Int, g : Int, b : Int): List<Double>{
-
-        val R : Double = r / (255).toDouble()
-        val G : Double = g / (255).toDouble()
-        val B : Double = b / (255).toDouble()
-
-        val maximum = max(max(R, G), B)
-        val minimum = min(min(R, G), B)
-        var h : Double = (maximum + minimum) / 2
-        var s : Double = (maximum + minimum) / 2
-        val l : Double = (maximum + minimum) / 2
-
-        if(maximum == minimum){
-            // achromatic
-            h = (0).toDouble()
-            s = (0).toDouble()
-        }else{
-            val d = maximum - minimum
-            s = if(l > 0.5){
-                d / (2 - maximum - minimum)
-            } else {
-                d / (maximum + minimum)
-            }
-
-            val temp = if(g < b){
-                (6).toDouble()
-            } else {
-                (0).toDouble()
-            }
-
-            when(maximum){
-                R -> h = (g - b) / d + temp
-                G -> h = (b - r) / d + 2
-                B -> h = (r - g) / d + 4
-            }
-
-            h /= 6
-        }
-
-        return listOf(h, s, l)
-    }
-
-    private fun hue2rgb(p : Double, q : Double, t: Double) : Double{
-
-        var a = t
-
-        if(a < 0) a += 1
-        if(a > 1) a -= 1
-        if(a < 1/6) return p + (q - p) * 6 * a
-        if(a < 1/2) return q
-        if(a < 2/3) return p + (q - p) * (2/3 - a) * 6
-        return p
-    }
-    */
 
     /**
      * return true if viewColor > viewBehindColor (lighten) else return false (darken)
@@ -461,6 +363,7 @@ class SkInit {
             Log.d("info", " Apply Color Contrast Tactic : DARKEN COLOR = $newColor ")
         }
         view.setBackgroundColor(newColor)
+
     }
 
     private fun applyResizeTactic(viewAnalysisData: SkAnalysisData){
@@ -486,63 +389,6 @@ class SkInit {
         db.addAnalysisData(newAnalysisData)
         return oldAnalysisData
     }
-
-    /*
-    /**
-     * Recompute the analysis data for each view
-     * Change last correction date
-     * return old analysis data to compare with new
-     */
-    private fun analyseData(dbHelper : DatabaseHelper, activity: Activity, clicks : MutableList<SkClicksData>, deviceData : List<Any>) : List<SkAnalysisData>{
-
-        // Get data from DB
-        val views = dbHelper.getViewsData()
-
-        // Get previous analysis data of activity since last analyse
-        val oldAnalysisData = dbHelper.getAnalysisData(activity.localClassName)
-
-        // Analyse Data for each view in activity, if at least 10
-        if(clicks.isNotEmpty() && views.isNotEmpty()){
-
-            // Analyse data from all the views in this activity and save to table in DB
-            val skViewsID = getSkViewsID(activity)
-            for (viewID in skViewsID){
-                val analysisData = analyseViewData(viewID, activity.localClassName, clicks, views, deviceData)
-                if(analysisData != null){
-                    // Update analysis data
-                    dbHelper.addAnalysisData(analysisData)
-                }
-            }
-        }
-
-        // Change last correction date in DB
-        val time = Timestamp(System.currentTimeMillis())
-        dbHelper.updateLastCorrectionTimestamp(time.toString())
-
-        return oldAnalysisData
-    }
-
-    private fun analyseViewData(viewID : String, activity: String, clicksData : MutableList<SkClicksData>, viewsData : MutableList<SkCoordsData>, deviceData : List<Any>) : SkAnalysisData?{
-
-        val viewDelimitations = viewDelimitations(viewID, activity, viewsData)
-        val maxDistance = getMaxDistance(deviceData)
-
-        if(viewDelimitations.isNotEmpty() && maxDistance != 0){
-            val clicksOnView = clicksOnView(viewDelimitations, clicksData)
-            val clicksAroundView = clicksAroundView(viewDelimitations, maxDistance, clicksData)
-            val centerOfView = centerOfView(viewDelimitations)
-
-            val errorRatio = getErrorRatio(clicksOnView, clicksAroundView)
-            val averageDistFromBorder = getAverageDistanceFromBorder(viewDelimitations, clicksAroundView)
-            val distGravityCenter = getDistGravityCenter(clicksOnView, clicksAroundView, centerOfView)
-
-            return SkAnalysisData(viewID, activity, errorRatio, averageDistFromBorder, distGravityCenter)
-        }
-
-        return null
-
-    }
-    */
 
     private fun getErrorRatio(clicksOnView : MutableList<SkClicksData>, clicksAroundView : MutableList<SkClicksData>) : Float{
         // Compute error ratio
@@ -751,34 +597,6 @@ class SkInit {
         return null
     }
 
-    private fun getSkViewsID(activity: Activity) : List<String>{
-
-        val skViewsID : MutableList<String> = mutableListOf()
-
-        //get the root view
-        val rv: ViewGroup? = activity.window?.decorView?.findViewById(android.R.id.content) as ViewGroup?
-
-        //get all the views of the root view
-        if(rv != null){
-            val allChildren : List<View> = getAllChildren(rv)
-
-            //Check for every view in the activity if it's a Silverkit view, if yes add viewID to list
-            for (v in allChildren) {
-
-                if (v is SkTools) {
-
-                    val viewID = getViewID(v)
-                    skViewsID.add(viewID)
-                }
-            }
-
-        } else {
-            Log.d("info", "SkInit : ERROR WHILE GETTING ROOT VIEW OF ACTIVITY $activity")
-        }
-
-        return skViewsID
-    }
-
 
     // -------------------- INIT
 
@@ -895,105 +713,6 @@ class SkInit {
         return view.context.javaClass.simpleName
     }
 
-    /*
-    private fun saveCoordinates(view:View, viewData: SkCoordsData){
-
-        //Create CSV if it doesn't exist
-        val path = view.context.getExternalFilesDir(null)?.absolutePath
-        val str = "$path/CoordinatesData.csv"
-        FileWriter(str, true)
-
-        //Read CSV
-        val data:MutableList<List<String>> = readCSVCoordsData(str)
-
-        //If the coords aren't saved, saved them
-        val viewToSave = listOf(viewData.viewLocal, viewData.coordTL?.get(0).toString(), viewData.coordTL?.get(1).toString(), viewData.coordDR?.get(0).toString(), viewData.coordDR?.get(1).toString())
-
-        if(!data.contains(viewToSave)){
-
-            try {
-
-                val writer = FileWriter(str, true)
-
-                val csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT)
-
-                val coordTL = viewData.coordTL
-                val tl_x = coordTL?.get(0)
-                val tl_y = coordTL?.get(1)
-
-                val coordDR = viewData.coordDR
-                val dr_x = coordDR?.get(0)
-                val dr_y = coordDR?.get(1)
-
-                csvPrinter.printRecord(viewData.viewID, viewData.viewLocal, tl_x, tl_y, dr_x, dr_y)
-
-                csvPrinter.flush()
-                csvPrinter.close()
-
-                println("Write coordinates data in CSV successfully!")
-
-            } catch (e: Exception) {
-
-                println("Writing coordinates data in CSV error!")
-                e.printStackTrace()
-
-            }
-
-        }
-
-
-    }
-    */
-
-    /*
-    private fun readCSVCoordsData(path: String): MutableList<List<String>>{
-
-        val data:MutableList<List<String>> = mutableListOf()
-
-        var fileReader: BufferedReader? = null
-
-        try {
-
-            var line: String?
-
-            fileReader = BufferedReader(FileReader(path))
-
-            // Read CSV header
-            line = fileReader.readLine()
-
-            // Read the file line by line starting from the first line
-            while (line != null) {
-                val tokens = line.split(",")
-                if (tokens.isNotEmpty()) {
-
-                    val activity = tokens[1]
-                    val coordTLX = tokens[2]
-                    val coordTLY = tokens[3]
-                    val coordDRX = tokens[4]
-                    val coordDRY = tokens[5]
-                    data.add(listOf(activity,coordTLX,coordTLY,coordDRX,coordDRY))
-
-                }
-
-                line = fileReader.readLine()
-            }
-
-        } catch (e: Exception) {
-            println("Reading CSV Error!")
-            e.printStackTrace()
-        } finally {
-            try {
-                fileReader!!.close()
-            } catch (e: IOException) {
-                println("Closing fileReader Error!")
-                e.printStackTrace()
-            }
-        }
-
-        return data
-    }
-    */
-
     private fun saveCoordinates(view: View, viewData: SkCoordsData){
 
         val context = view.context
@@ -1002,67 +721,6 @@ class SkInit {
         dbHelper.addViewData(viewData)
 
     }
-
-    /*
-    private fun saveHardwareData(activity: Activity){
-
-        var fileReader: BufferedReader? = null
-
-        //Create CSV if it doesn't exist
-        val path = activity.baseContext.getExternalFilesDir(null)?.absolutePath
-        val str = "$path/HardwareData.csv"
-        FileWriter(str, true)
-
-        try {
-
-            var line: String?
-
-            fileReader = BufferedReader(FileReader(str))
-
-            // Read CSV first line
-            line = fileReader.readLine()
-
-            // if there's not even a line in the file, write in it the hardware info
-            if (line == null) {
-
-                //Data needs to be saved
-                try {
-
-                    val writer = FileWriter(str, true)
-
-                    val csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT)
-
-                    val hardwareData = getHardwareData(activity)
-
-                    csvPrinter.printRecord(hardwareData.screenWidth, hardwareData.screenHeight)
-
-                    csvPrinter.flush()
-                    csvPrinter.close()
-
-                    println("Write hardware data in CSV successfully!")
-
-                } catch (e: Exception) {
-
-                    println("Writing hardware data in CSV error!")
-                    e.printStackTrace()
-
-                }
-
-            }
-
-        } catch (e: Exception) {
-            println("Reading HardwareData CSV Error!")
-            e.printStackTrace()
-        } finally {
-            try {
-                fileReader!!.close()
-            } catch (e: IOException) {
-                println("Closing HardwareData CSV fileReader Error!")
-                e.printStackTrace()
-            }
-        }
-    }
-    */
 
     private fun saveHardwareData(activity: Activity){
 
