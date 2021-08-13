@@ -168,7 +168,7 @@ class SkInit {
 
             applyColorContrastTactic(activity, newAnalysisData, oldAnalysisData)
             //applyResizeTactic(data)
-            //applyGravityCenterTactic(data)
+            applyGravityCenterTactic(activity, newAnalysisData, oldAnalysisData)
 
         }
     }
@@ -372,8 +372,119 @@ class SkInit {
 
     }
 
-    private fun applyGravityCenterTactic(viewAnalysisData: SkAnalysisData){
+    private fun applyGravityCenterTactic(activity: Activity, newAnalysisData: SkAnalysisData, oldAnalysisData: SkAnalysisData?){
 
+        val viewID = newAnalysisData.viewID
+        val resourceID = activity.baseContext.resources.getIdentifier(viewID, "layout", activity.packageName)
+        val view = activity.window?.decorView?.findViewById(resourceID) as View
+
+        val db =  DatabaseHelper(activity.baseContext)
+        val viewsData = db.getViewsDataOfActivity(activity.localClassName)
+
+        val lp = view.layoutParams
+        val isWrapContent = (lp.height == ViewGroup.LayoutParams.WRAP_CONTENT || lp.width == ViewGroup.LayoutParams.WRAP_CONTENT)
+        val isMatchParent = (lp.height == ViewGroup.LayoutParams.MATCH_PARENT || lp.width == ViewGroup.LayoutParams.MATCH_PARENT)
+        val isFillParent = (lp.height == ViewGroup.LayoutParams.FILL_PARENT || lp.width == ViewGroup.LayoutParams.FILL_PARENT)
+
+
+        // view need to have a fixed size
+        if(!isWrapContent && !isMatchParent && !isFillParent){
+            // If condition for applying tactics are met
+            if(checkGravityCenterTactic(newAnalysisData, oldAnalysisData)){
+
+                val gravityCenterX = newAnalysisData.gravityCenterX
+                val gravityCenterY = newAnalysisData.gravityCenterY
+                val delimitations = viewDelimitations(newAnalysisData.viewID, activity.localClassName, viewsData)
+
+                if(delimitations != null){
+
+                    val centerOfView = centerOfView(delimitations)
+
+                    if(centerOfView != null){
+                        var paddingStart = view.paddingStart
+                        var paddingEnd = view.paddingEnd
+                        var paddingTop = view.paddingTop
+                        var paddingBottom = view.paddingBottom
+
+                        if(gravityCenterX < centerOfView[0]){
+                            // left : move right
+                            paddingStart += 2
+                            Log.d("info", " Apply Color Contrast Tactic : MOVE RIGHT ")
+                        }
+                        if(gravityCenterX > centerOfView[0]){
+                            // right : move left
+                            paddingEnd += 2
+                            Log.d("info", " Apply Color Contrast Tactic : MOVE LEFT ")
+                        }
+                        if(gravityCenterY < centerOfView[1]){
+                            // top : move bottom
+                            paddingTop += 2
+                            Log.d("info", " Apply Color Contrast Tactic : MOVE BOTTOM ")
+                        }
+                        if(gravityCenterY > centerOfView[1]){
+                            // bottom : move top
+                            paddingBottom += 2
+                            Log.d("info", " Apply Color Contrast Tactic : MOVE TOP ")
+                        }
+
+                        view.setPadding(paddingStart, paddingTop, paddingEnd, paddingBottom)
+                        val tacticsData = SkTacticsData(viewID, activity.localClassName, getViewColor(view), paddingStart, paddingEnd, paddingTop, paddingBottom)
+                        db.saveTacticsData(tacticsData)
+
+                        Log.d("info", " Apply Color Contrast Tactic : SUCCESSFUL ")
+
+                    } else {
+                        Log.d("info", " Apply Color Contrast Tactic : ERROR WHILE GETTING VIEW CENTER ")
+                    }
+
+                } else {
+                    Log.d("info", " Apply Color Contrast Tactic : ERROR WHILE GETTING VIEW DELIMITATIONS ")
+                }
+
+            } else {
+                Log.d("info", " Apply Gravity Center Tactic : NOT NECESSARY ")
+            }
+        } else {
+            Log.d("info", " Apply Gravity Center Tactic : IMPOSSIBLE TO APPLY TACTIC : VIEW DOESN'T HAVE A FIXED SIZE")
+        }
+
+        db.close()
+    }
+
+    private fun checkGravityCenterTactic(newAnalysisData: SkAnalysisData, oldAnalysisData: SkAnalysisData?): Boolean{
+
+        val distGravityCenter = newAnalysisData.distGravityCenter
+
+        // If there is old data compare
+        if(oldAnalysisData != null){
+            val oldDistGravityCenter = oldAnalysisData.distGravityCenter
+
+            // See if it's necessary to apply tactic
+            if(distGravityCenter <= oldDistGravityCenter){
+                // Tactics works
+                // If distance between gravity center and widget center is more than 15 pixels, apply else don't apply
+                Log.d("info", " checkGravityCenterTactic : APPLY TACTIC : ${distGravityCenter > 15} ")
+                return distGravityCenter > 15
+
+            } else {
+                // Tactics doesn't works
+                // If the gravity center is way worse than before last correction, get back to last correction
+                return if(oldDistGravityCenter + 20 <= distGravityCenter){
+                    Log.d("info", " checkGravityCenterTactic : REDUCE TACTIC ")
+                    false
+                } else {
+                    // On amplifie la tactic car on se dit que c'était surement pas assez pour avoir un impact
+                    Log.d("info", " checkGravityCenterTactic : AMPLIFY TACTIC ${true}")
+                    true
+                }
+            }
+        }
+        // See if it's necessary to apply tactic
+        else {
+            // If there isn't any old data than it's the first time we need to apply tactic if distGravityCenter > 15
+            Log.d("info", " checkGravityCenterTactic : APPLY TACTIC : ${distGravityCenter > 15} ")
+            return distGravityCenter > 15
+        }
     }
 
 
@@ -383,9 +494,10 @@ class SkInit {
 
         val errorRatio = getErrorRatio(clicksOnView, clicksAroundView)
         val averageDistFromBorder = getAverageDistanceFromBorder(viewDelimitations, clicksAroundView)
-        val distGravityCenter = getDistGravityCenter(clicksOnView, clicksAroundView, centerOfView)
+        val gravityCenter = getGravityCenter(clicksOnView, clicksAroundView)
+        val distGravityCenter = getDistGravityCenter(gravityCenter, centerOfView)
 
-        val newAnalysisData = SkAnalysisData(viewID, activityStr, errorRatio, averageDistFromBorder, distGravityCenter)
+        val newAnalysisData = SkAnalysisData(viewID, activityStr, errorRatio, averageDistFromBorder, distGravityCenter, gravityCenter[0], gravityCenter[1])
         val oldAnalysisData = db.getAnalysisData(viewID, activityStr)
 
         db.addAnalysisData(newAnalysisData)
@@ -473,10 +585,7 @@ class SkInit {
 
     }
 
-    private fun getDistGravityCenter(clicksOnView : MutableList<SkClicksData>, clicksAroundView : MutableList<SkClicksData>, centerOfView : List<Int>) : Float{
-        // Compute gravity center
-        // Compute distance between gravity center and center of view
-
+    private fun getGravityCenter(clicksOnView : MutableList<SkClicksData>, clicksAroundView : MutableList<SkClicksData>) : List<Int>{
         val total_x = mutableListOf<Int>()
         val total_y = mutableListOf<Int>()
 
@@ -490,10 +599,16 @@ class SkInit {
             total_y.add(click.rawY)
         }
 
-        val gravityX : Float = total_x.sum().toFloat().div(total_x.size.toFloat())
-        val gravityY : Float = total_y.sum().toFloat().div(total_y.size.toFloat())
+        val gravityX : Int = total_x.sum().div(total_x.size)
+        val gravityY : Int = total_y.sum().div(total_y.size)
 
-        val result = sqrt(((centerOfView[0] - gravityX).pow(2) - (centerOfView[1] - gravityY).pow(2)).absoluteValue)
+        Log.d("info", "gravityCenter : $gravityX $gravityY ")
+        return listOf(gravityX, gravityY)
+    }
+
+    private fun getDistGravityCenter(gravityCenter : List<Int>, centerOfView : List<Int>) : Float{
+
+        val result = sqrt(((centerOfView[0] - gravityCenter[0].toFloat()).pow(2) - (centerOfView[1] - gravityCenter[1].toFloat()).pow(2)).absoluteValue)
 
         Log.d("info", "getDistGravityCenter : $result ")
         return result
@@ -652,7 +767,7 @@ class SkInit {
         }
     }
 
-     private fun getAllChildren(v: View): List<View> {
+    private fun getAllChildren(v: View): List<View> {
         if (v !is ViewGroup) {
             return ArrayList()
         }

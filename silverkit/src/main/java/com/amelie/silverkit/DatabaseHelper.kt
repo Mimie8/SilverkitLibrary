@@ -45,6 +45,8 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
         const val C_ERROR_RATIO = "ERROR_RATIO"
         const val C_AVERAGE_DIST_FROM_BORDER = "AVERAGE_DIST_FROM_BORDER"
         const val C_DIST_GRAVITY_CENTER = "DIST_GRAVITY_CENTER"
+        const val C_GRAVITY_CENTER_X = "GRAVITY_CENTER_X"
+        const val C_GRAVITY_CENTER_Y = "GRAVITY_CENTER_Y"
 
         const val T_TACTICS_DATA = "TACTICS_DATA_TABLE"
         const val C_TACTICS_DATA_ID = "ID"
@@ -61,7 +63,7 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
         val createClickEventTable = "CREATE TABLE $T_CLICK_EVENTS ($C_CLICK_ID INTEGER PRIMARY KEY AUTOINCREMENT, $C_VIEW_ID TEXT, $C_VIEW_TYPE TEXT, $C_VIEW_ACTIVTY TEXT, $C_CLICK_X INT, $C_CLICK_Y INT, $C_TIMESTAMP TEXT)"
         val createViewDataTable = "CREATE TABLE $T_VIEW_DATA ($C_VIEW_DATA_ID INTEGER PRIMARY KEY AUTOINCREMENT, $C_VIEW_ID TEXT, $C_VIEW_ACTIVTY TEXT, $C_TOPLEFT_X INT, $C_TOPLEFT_Y INT, $C_BOTTOMRIGHT_X INT, $C_BOTTOMRIGHT_Y INT, $C_BASE_COLOR INT, $C_BASE_SIZE_WIDTH INT, $C_BASE_SIZE_HEIGHT INT)"
         val createDeviceDataTable = "CREATE TABLE $T_DEVICE_DATA ($C_DEVICE_DATA_ID INTEGER PRIMARY KEY AUTOINCREMENT, $C_SCREEN_WIDTH INT, $C_SCREEN_HEIGHT INT, $C_CORRECTIONS_TIMESTAMP TEXT)"
-        val createAnalysisDataTable = "CREATE TABLE $T_ANALYSIS_DATA ($C_ANALYSIS_DATA_ID INTEGER PRIMARY KEY AUTOINCREMENT, $C_VIEW_ID TEXT, $C_VIEW_ACTIVTY TEXT, $C_ERROR_RATIO TEXT, $C_AVERAGE_DIST_FROM_BORDER TEXT, $C_DIST_GRAVITY_CENTER TEXT)"
+        val createAnalysisDataTable = "CREATE TABLE $T_ANALYSIS_DATA ($C_ANALYSIS_DATA_ID INTEGER PRIMARY KEY AUTOINCREMENT, $C_VIEW_ID TEXT, $C_VIEW_ACTIVTY TEXT, $C_ERROR_RATIO TEXT, $C_AVERAGE_DIST_FROM_BORDER TEXT, $C_DIST_GRAVITY_CENTER TEXT, $C_GRAVITY_CENTER_X INT, $C_GRAVITY_CENTER_Y INT)"
         val createTacticsDataTable = "CREATE TABLE $T_TACTICS_DATA ($C_TACTICS_DATA_ID INTEGER PRIMARY KEY AUTOINCREMENT, $C_VIEW_ID TEXT, $C_VIEW_ACTIVTY TEXT, $C_VIEW_COLOR INT, $C_PADDING_START INT, $C_PADDING_END INT, $C_PADDING_TOP INT, $C_PADDING_BOTTOM INT)"
 
 
@@ -208,6 +210,8 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
         cv.put(C_ERROR_RATIO, roundTo2Decimal(analysisData.errorRatio))
         cv.put(C_AVERAGE_DIST_FROM_BORDER, roundTo2Decimal(analysisData.averageDistFromBorder))
         cv.put(C_DIST_GRAVITY_CENTER, roundTo2Decimal(analysisData.distGravityCenter))
+        cv.put(C_GRAVITY_CENTER_X, analysisData.gravityCenterX)
+        cv.put(C_GRAVITY_CENTER_Y, analysisData.gravityCenterY)
 
         val where = "id=?"
         val whereArgs = arrayOf(java.lang.String.valueOf(id))
@@ -233,6 +237,8 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
         cv.put(C_ERROR_RATIO, roundTo2Decimal(analysisData.errorRatio))
         cv.put(C_AVERAGE_DIST_FROM_BORDER, roundTo2Decimal(analysisData.averageDistFromBorder))
         cv.put(C_DIST_GRAVITY_CENTER, roundTo2Decimal(analysisData.distGravityCenter))
+        cv.put(C_GRAVITY_CENTER_X, analysisData.gravityCenterX)
+        cv.put(C_GRAVITY_CENTER_Y, analysisData.gravityCenterY)
 
         val result = db.insert(T_ANALYSIS_DATA, null, cv)
         db.close()
@@ -276,7 +282,7 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
 
     fun getClicksDataOfActivity(activity : String, lastCorrectionTimestamp : String) : MutableList<SkClicksData> {
         val db = this.readableDatabase
-        
+
         val query = "SELECT * FROM $T_CLICK_EVENTS WHERE $C_TIMESTAMP > \'$lastCorrectionTimestamp\' AND $C_VIEW_ACTIVTY = '$activity'"
 
         val clicksData = mutableListOf<SkClicksData>()
@@ -378,10 +384,12 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
                 val errorRatio = cursor.getString(3)
                 val averageDistFromBorder = cursor.getString(4)
                 val distGravityCenter = cursor.getString(5)
+                val gravityX = cursor.getInt(6)
+                val gravityY = cursor.getInt(7)
 
                 cursor.close()
                 db.close()
-                SkAnalysisData(viewid, viewActivity, errorRatio.toFloat(), averageDistFromBorder.toFloat(), distGravityCenter.toFloat())
+                SkAnalysisData(viewid, viewActivity, errorRatio.toFloat(), averageDistFromBorder.toFloat(), distGravityCenter.toFloat(), gravityX, gravityY)
             } else {
                 cursor.close()
                 db.close()

@@ -11,7 +11,7 @@ class SkTacticsData {
     var paddingBottom : Int? = null
 
     constructor()
-    constructor(viewID: String, viewLocal: String, color: Int, paddingStart: Int, paddingEnd: Int, paddingTop : Int, paddingBottom : Int){
+    constructor(viewID: String, viewLocal: String, color: Int?, paddingStart: Int, paddingEnd: Int, paddingTop : Int, paddingBottom : Int){
         this.viewID = viewID
         this.viewLocal = viewLocal
         this.color = color
