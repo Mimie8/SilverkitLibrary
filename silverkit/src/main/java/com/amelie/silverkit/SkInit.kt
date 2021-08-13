@@ -219,7 +219,7 @@ class SkInit {
                     false
                 } else {
                     // On amplifie la tactic car on se dit que c'était surement pas assez pour avoir un impact
-                    Log.d("info", " checkColorContrastTacticCdt : CONTINUE TO APPLY TACTIC ${true}")
+                    Log.d("info", " checkColorContrastTacticCdt : AMPLIFY TACTIC ${true}")
                     true
                 }
             }
