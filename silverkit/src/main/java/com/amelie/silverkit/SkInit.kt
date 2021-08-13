@@ -194,12 +194,18 @@ class SkInit {
      * if oldErrorRatio > newErrorRatio : tactic fonctionne , sinon fonctionne pas
      *
      */
-    private fun checkColorContrastTacticCdt(newAnalysisData: SkAnalysisData, oldAnalysisData: SkAnalysisData?, view:View, viewColor: Int?, viewBehindColor: Int?, activityStr: Activity) : Boolean{
+    private fun checkColorContrastTacticCdt(newAnalysisData: SkAnalysisData, oldAnalysisData: SkAnalysisData?, view:View, viewColor: Int?, viewBehindColor: Int?, activity: Activity) : Boolean{
 
         if(oldAnalysisData != null){
             // If there is old data than compare to new
             val oldRatio : Float = oldAnalysisData.errorRatio
             val newRatio : Float = newAnalysisData.errorRatio
+
+            // Get basic color of view
+            val context = activity.baseContext
+            val dbHelper =  DatabaseHelper(context)
+            val baseColor = dbHelper.getViewBaseColor(newAnalysisData.viewID, activity.localClassName)
+            Log.d("info", " Remove Color Contrast Tactic : VIEW ${newAnalysisData.viewID} BASE COLOR $baseColor ")
 
             Log.d("info", " checkColorContrastTacticCdt : oldRatio $oldRatio newRatio $newRatio")
 
@@ -209,15 +215,22 @@ class SkInit {
                 Log.d("info", " checkColorContrastTacticCdt : CONTINUE TO APPLY TACTIC ${newRatio > 0.1f}")
                 newRatio > 0.1f
             } else {
-                // La tactique fonctionne pas et empire les résultats
-                if(oldRatio + 0.3f <= newRatio){
-                    // Si les resultats empire plus d'un certains seuil (de 0.3 de ratio) on enleve la tactique
-                    reduceColorContrastTactic(newAnalysisData.viewID, view, viewColor, viewBehindColor, activityStr)
-                    Log.d("info", " checkColorContrastTacticCdt : REMOVE TACTIC ")
-                    false
+                // La tactique fonctionne pas
+                if(baseColor != viewColor){
+                    // Tactic précédemment appliquée
+                    if(oldRatio + 0.3f <= newRatio){
+                        // Si les resultats empire plus d'un certains seuil (de 0.3 de ratio) on enleve la tactique
+                        reduceColorContrastTactic(newAnalysisData.viewID, view, viewColor, viewBehindColor)
+                        Log.d("info", " checkColorContrastTacticCdt : REDUCE TACTIC ")
+                        false
+                    } else {
+                        // On amplifie la tactic car on se dit que c'était surement pas assez pour avoir un impact
+                        Log.d("info", " checkColorContrastTacticCdt : AMPLIFY TACTIC ${true}")
+                        true
+                    }
                 } else {
-                    // On amplifie la tactic car on se dit que c'était surement pas assez pour avoir un impact
-                    Log.d("info", " checkColorContrastTacticCdt : AMPLIFY TACTIC ${true}")
+                    // Apply tactic car la view est dans son état initial
+                    Log.d("info", " checkColorContrastTacticCdt : APPLY TACTIC ${true}")
                     true
                 }
             }
@@ -229,25 +242,15 @@ class SkInit {
         }
     }
 
-    private fun reduceColorContrastTactic(viewID : String, view: View, viewColor: Int?, viewBehindColor: Int?, viewActivity : Activity){
-        // Get basic color of view
-        val context = viewActivity.baseContext
-        val dbHelper =  DatabaseHelper(context)
-
-        val baseColor = dbHelper.getViewBaseColor(viewID, viewActivity.localClassName)
-        Log.d("info", " Remove Color Contrast Tactic : VIEW $viewID BASE COLOR $baseColor ")
+    private fun reduceColorContrastTactic(viewID : String, view: View, viewColor: Int?, viewBehindColor: Int?){
 
         // Reduce tactics application if the view color isn't the base one
         if(viewColor != null){
 
             val result = getBrightnessLevel(viewColor, viewBehindColor)
             if(result != null){
-                if(viewColor != baseColor){
-                    changeBrightnessLevel(view, viewColor, !result)
-                    Log.d("info", " Reduce Color Contrast Tactic : REDUCE COLOR TACTIC ")
-                } else {
-                    Log.d("info", " Reduce Color Contrast Tactic : VIEW HAS ITS BASIC COLOR AND TACTIC CANNOT BE REDUCED MORE ")
-                }
+                changeBrightnessLevel(view, viewColor, !result)
+                Log.d("info", " Reduce Color Contrast Tactic : REDUCE COLOR TACTIC ")
             }
         } else {
             view.setBackgroundColor(Color.TRANSPARENT)
