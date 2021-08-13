@@ -66,14 +66,22 @@ class SkInit {
                 val padEnd = viewTactics.paddingEnd
                 val padTop = viewTactics.paddingTop
                 val padBottom = viewTactics.paddingBottom
+                val width = viewTactics.viewWidth
+                val height = viewTactics.viewHeight
 
+                // Restore color
                 if(color != null){
                     viewElement.setBackgroundColor(color)
                 }
 
-                if(padStart != null && padEnd != null && padTop != null && padBottom != null){
-                    viewElement.setPadding(padStart, padTop, padEnd, padBottom)
-                }
+                // Restore paddings
+                viewElement.setPadding(padStart, padTop, padEnd, padBottom)
+                
+                // Restore size
+                val params = viewElement.layoutParams
+                params.width  = width
+                params.height = height
+                viewElement.layoutParams = params
             }
         }
 
@@ -394,7 +402,7 @@ class SkInit {
         val resourceID = activity.baseContext.resources.getIdentifier(viewID, "layout", activity.packageName)
         val view = activity.window?.decorView?.findViewById(resourceID) as View
 
-        val sizeJump = 2
+        val sizeJump = 4
 
         if(checkResizeTactic(view, activity, newAnalysisData, oldAnalysisData)){
 
@@ -475,7 +483,7 @@ class SkInit {
                     val currentWidth = view.width
                     val currentHeight = view.height
                     val maxSizeRatio = 1.5f
-                    val sizeJump = 2
+                    val sizeJump = 4
                     val thresholdDist = 10
                     val thresholdRatio = 0.1f
 
