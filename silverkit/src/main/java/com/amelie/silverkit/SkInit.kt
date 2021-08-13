@@ -76,12 +76,13 @@ class SkInit {
 
                 // Restore paddings
                 viewElement.setPadding(padStart, padTop, padEnd, padBottom)
-                
+
                 // Restore size
                 val params = viewElement.layoutParams
                 params.width  = width
                 params.height = height
                 viewElement.layoutParams = params
+                Log.d("info", "Restore size of view : width $width height $height ")
             }
         }
 

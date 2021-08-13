@@ -84,37 +84,6 @@ interface SkTools {
         return view.context.javaClass.simpleName
     }
 
-    /*
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun saveClicks(view: View, touchData: SkClicksData){
-
-        val path = view.context.getExternalFilesDir(null)?.absolutePath
-        val str = "$path/ClicksData.csv"
-
-        try {
-
-            val writer = FileWriter(str, true)
-
-            val csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT)
-
-            csvPrinter.printRecord(touchData.viewID, touchData.viewType, touchData.viewLocal, touchData.rawX, touchData.rawY, touchData.timestamp)
-
-            csvPrinter.flush()
-            csvPrinter.close()
-
-            println("Write click data in CSV successfully!")
-
-        } catch (e: Exception) {
-
-            println("Writing click data in CSV error!")
-            e.printStackTrace()
-
-        }
-
-
-    }
-    */
-
     private fun saveClicks(view: View, clickData: SkClicksData){
 
         val context = view.context
