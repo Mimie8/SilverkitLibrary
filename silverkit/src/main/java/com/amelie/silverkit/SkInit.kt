@@ -403,7 +403,7 @@ class SkInit {
         val resourceID = activity.baseContext.resources.getIdentifier(viewID, "layout", activity.packageName)
         val view = activity.window?.decorView?.findViewById(resourceID) as View
 
-        val sizeJump = 4
+        val sizeJump = dpsToPixels(4, activity.baseContext)
 
         if(checkResizeTactic(view, activity, newAnalysisData, oldAnalysisData)){
 
@@ -455,8 +455,6 @@ class SkInit {
             params.height = height + sizeJump
             view.layoutParams = params
 
-            Log.d("info", " applyResizeTactic : WIDTH $width HEIGHT $height ")
-
             val newData = SkTacticsData(viewID, activity.localClassName, color, paddingStart, paddingEnd, paddingTop, paddingBottom, oldPaddingStart, oldPaddingEnd, oldPaddingTop, oldPaddingBottom, width + sizeJump, height + sizeJump)
             db.saveTacticsData(newData)
 
@@ -486,7 +484,7 @@ class SkInit {
                     val currentWidth = view.width
                     val currentHeight = view.height
                     val maxSizeRatio = 1.5f
-                    val sizeJump = 4
+                    val sizeJump = dpsToPixels(4, activity.baseContext)
                     val thresholdDist = 10
                     val thresholdRatio = 0.1f
 
@@ -556,9 +554,6 @@ class SkInit {
         if(data != null){
             val width = data.viewWidth
             val height = data.viewHeight
-
-            Log.d("info", " reduceResizeTactic : WIDTH $width HEIGHT $height ")
-
 
             val params = view.layoutParams
             params.width  = width - sizeJump
@@ -752,6 +747,11 @@ class SkInit {
         val isFillParent = (lp.height == ViewGroup.LayoutParams.FILL_PARENT || lp.width == ViewGroup.LayoutParams.FILL_PARENT)
 
         return !isWrapContent && !isMatchParent && !isFillParent
+    }
+
+    private fun dpsToPixels(dps : Int, context: Context) : Int{
+        val scale: Float = context.resources.displayMetrics.density
+        return (dps * scale + 0.5f).toInt()
     }
 
     // -------------------- ANALYSE DATA
@@ -979,7 +979,6 @@ class SkInit {
         }
         return null
     }
-
 
     // -------------------- INIT
 
