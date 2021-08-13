@@ -495,7 +495,7 @@ class SkInit {
                 return if(oldDistGravityCenter + 20 <= distGravityCenter){
 
                     reduceGravityCenterTactic(newAnalysisData.viewID, activity, view, newAnalysisData)
-                    
+
                     false
                 } else {
                     // On amplifie la tactic car on se dit que c'était surement pas assez pour avoir un impact
