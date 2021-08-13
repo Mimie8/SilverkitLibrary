@@ -634,8 +634,10 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
             val oldPaddingEnd = cursor.getInt(9)
             val oldPaddingTop = cursor.getInt(10)
             val oldPaddingBottom = cursor.getInt(11)
+            val viewWidth = cursor.getInt(12)
+            val viewHeight = cursor.getInt(13)
 
-            val data = SkTacticsData(id, viewActivity, color, paddingStart, paddingEnd, paddingTop, paddingBottom, oldPaddingStart, oldPaddingEnd, oldPaddingTop,oldPaddingBottom)
+            val data = SkTacticsData(id, viewActivity, color, paddingStart, paddingEnd, paddingTop, paddingBottom, oldPaddingStart, oldPaddingEnd, oldPaddingTop,oldPaddingBottom, viewWidth, viewHeight)
             cursor.close()
             db.close()
             data
