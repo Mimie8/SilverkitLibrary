@@ -403,6 +403,7 @@ class SkInit {
 
         val db =  DatabaseHelper(activity.baseContext)
         val viewsData = db.getViewsDataOfActivity(activity.localClassName)
+        val tactic = db.getTacticsDataOfView(viewID, activity.localClassName)!!
 
         val lp = view.layoutParams
         val isWrapContent = (lp.height == ViewGroup.LayoutParams.WRAP_CONTENT || lp.width == ViewGroup.LayoutParams.WRAP_CONTENT)
@@ -424,34 +425,44 @@ class SkInit {
                     val centerOfView = centerOfView(delimitations)
 
                     if(centerOfView != null){
-                        var paddingStart = view.paddingStart
-                        var paddingEnd = view.paddingEnd
-                        var paddingTop = view.paddingTop
-                        var paddingBottom = view.paddingBottom
+                        var paddingStart = tactic.paddingStart
+                        var paddingEnd = tactic.paddingEnd
+                        var paddingTop = tactic.paddingTop
+                        var paddingBottom = tactic.paddingBottom
+
+                        // S'il y a la place, add paddings
 
                         if(gravityCenterX < centerOfView[0]){
                             // left : move right
-                            paddingStart += 4
-                            Log.d("info", " Apply Color Contrast Tactic : MOVE RIGHT ")
+                            if(paddingStart < view.width){
+                                paddingStart += 4
+                                Log.d("info", " Apply Color Contrast Tactic : MOVE RIGHT ")
+                            }
                         }
                         if(gravityCenterX > centerOfView[0]){
                             // right : move left
-                            paddingEnd += 4
-                            Log.d("info", " Apply Color Contrast Tactic : MOVE LEFT ")
+                            if(paddingEnd < view.width){
+                                paddingEnd += 4
+                                Log.d("info", " Apply Color Contrast Tactic : MOVE LEFT ")
+                            }
                         }
                         if(gravityCenterY < centerOfView[1]){
                             // top : move bottom
-                            paddingTop += 4
-                            Log.d("info", " Apply Color Contrast Tactic : MOVE BOTTOM ")
+                            if(paddingTop < view.height){
+                                paddingTop += 4
+                                Log.d("info", " Apply Color Contrast Tactic : MOVE BOTTOM ")
+                            }
                         }
                         if(gravityCenterY > centerOfView[1]){
                             // bottom : move top
-                            paddingBottom += 4
-                            Log.d("info", " Apply Color Contrast Tactic : MOVE TOP ")
+                            if(paddingBottom < view.height){
+                                paddingBottom += 4
+                                Log.d("info", " Apply Color Contrast Tactic : MOVE TOP ")
+                            }
                         }
 
                         view.setPadding(paddingStart, paddingTop, paddingEnd, paddingBottom)
-                        val tacticsData = SkTacticsData(viewID, activity.localClassName, getViewColor(view), paddingStart, paddingEnd, paddingTop, paddingBottom, view.paddingStart, view.paddingEnd, view.paddingTop, view.paddingBottom)
+                        val tacticsData = SkTacticsData(viewID, activity.localClassName, getViewColor(view), paddingStart, paddingEnd, paddingTop, paddingBottom, tactic.paddingStart, tactic.paddingEnd, tactic.paddingTop, tactic.paddingBottom)
                         db.saveTacticsData(tacticsData)
 
                         Log.d("info", " Apply Color Contrast Tactic : SUCCESSFUL ")
