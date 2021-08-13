@@ -179,8 +179,6 @@ class SkInit {
         val resourceID = activity.baseContext.resources.getIdentifier(viewID, "layout", activity.packageName)
         val view = activity.window?.decorView?.findViewById(resourceID) as View
 
-        val db =  DatabaseHelper(activity.baseContext)
-
         // Get color of view
         val viewColor = getViewColor(view)
         Log.d("info", " viewColor : $viewColor ")
@@ -197,9 +195,7 @@ class SkInit {
                 val result = getBrightnessLevel(viewColor, viewBehindColor)
 
                 if(result != null){
-                    changeBrightnessLevel(view, viewColor, result)
-                    val data = SkTacticsData(newAnalysisData.viewID, newAnalysisData.viewLocal, viewColor, view.paddingStart, view.paddingEnd, view.paddingTop, view.paddingBottom)
-                    db.saveTacticsData(data)
+                    changeBrightnessLevel(view, viewColor, result, viewID, activity)
                     Log.d("info", " Apply Color Contrast Tactic : SUCCESSFUL ")
                 }
             } else {
@@ -210,7 +206,6 @@ class SkInit {
         } else {
             Log.d("info", " Apply Color Contrast Tactic : NOT NECESSARY ")
         }
-        db.close()
     }
 
     // verifier si l'application de la tactique a améliorer les resultats depuis la dernire application
@@ -248,7 +243,7 @@ class SkInit {
                     // Tactic précédemment appliquée
                     if(oldRatio + 0.3f <= newRatio){
                         // Si les resultats empire plus d'un certains seuil (de 0.3 de ratio) on enleve la tactique
-                        reduceColorContrastTactic(newAnalysisData.viewID, view, viewColor, viewBehindColor)
+                        reduceColorContrastTactic(newAnalysisData.viewID, activity, view, viewColor, viewBehindColor)
                         Log.d("info", " checkColorContrastTacticCdt : REDUCE TACTIC ")
                         false
                     } else {
@@ -270,14 +265,14 @@ class SkInit {
         }
     }
 
-    private fun reduceColorContrastTactic(viewID : String, view: View, viewColor: Int?, viewBehindColor: Int?){
+    private fun reduceColorContrastTactic(viewID : String, activity : Activity, view: View, viewColor: Int?, viewBehindColor: Int?){
 
         // Reduce tactics application if the view color isn't the base one
         if(viewColor != null){
 
             val result = getBrightnessLevel(viewColor, viewBehindColor)
             if(result != null){
-                changeBrightnessLevel(view, viewColor, !result)
+                changeBrightnessLevel(view, viewColor, !result, viewID, activity)
                 Log.d("info", " Reduce Color Contrast Tactic : REDUCE COLOR TACTIC ")
             }
         } else {
@@ -352,7 +347,9 @@ class SkInit {
         return viewL > viewBehindL
     }
 
-    private fun changeBrightnessLevel(view:View, viewColor: Int, lighten:Boolean){
+    private fun changeBrightnessLevel(view:View, viewColor: Int, lighten:Boolean, viewID: String, activity: Activity){
+
+        val db =  DatabaseHelper(activity.baseContext)
 
         val newColor : Int
         if(lighten){
@@ -362,7 +359,12 @@ class SkInit {
             newColor = darkenColor(viewColor, 10f)
             Log.d("info", " Apply Color Contrast Tactic : DARKEN COLOR = $newColor ")
         }
+
         view.setBackgroundColor(newColor)
+
+        val data = SkTacticsData(viewID, activity.localClassName, viewColor, view.paddingStart, view.paddingEnd, view.paddingTop, view.paddingBottom)
+        db.saveTacticsData(data)
+        db.close()
 
     }
 
