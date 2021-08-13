@@ -362,7 +362,7 @@ class SkInit {
 
         view.setBackgroundColor(newColor)
 
-        val data = SkTacticsData(viewID, activity.localClassName, viewColor, view.paddingStart, view.paddingEnd, view.paddingTop, view.paddingBottom)
+        val data = SkTacticsData(viewID, activity.localClassName, newColor, view.paddingStart, view.paddingEnd, view.paddingTop, view.paddingBottom)
         db.saveTacticsData(data)
         db.close()
 
