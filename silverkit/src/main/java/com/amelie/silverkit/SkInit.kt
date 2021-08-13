@@ -200,12 +200,10 @@ class SkInit {
             // If there is old data than compare to new
             val oldRatio : Float = oldAnalysisData.errorRatio
             val newRatio : Float = newAnalysisData.errorRatio
-            val oldDistFromBorder : Float = oldAnalysisData.averageDistFromBorder
-            val newDistFromBorder : Float = newAnalysisData.averageDistFromBorder
 
-            Log.d("info", " checkColorContrastTacticCdt : oldRatio $oldRatio newRatio $newRatio oldDistFromBorder $oldDistFromBorder newDistFromBorder $newDistFromBorder")
+            Log.d("info", " checkColorContrastTacticCdt : oldRatio $oldRatio newRatio $newRatio")
 
-            return if((oldRatio >= newRatio) || (oldDistFromBorder >= newDistFromBorder)){
+            return if((oldRatio >= newRatio)){
                 // La tactique fonctionne
                 // Si newRatio > 0.1 on continue d'appliquer sinon on arrête d'appliquer la tactique
                 Log.d("info", " checkColorContrastTacticCdt : CONTINUE TO APPLY TACTIC ${newRatio > 0.1f}")
