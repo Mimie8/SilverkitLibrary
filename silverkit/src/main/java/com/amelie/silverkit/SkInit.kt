@@ -374,15 +374,15 @@ class SkInit {
         var oPadB = 0
 
         if(tacticsData != null){
-            padS = tacticsData.paddingStart!!
-            padE = tacticsData.paddingEnd!!
-            padT = tacticsData.paddingTop!!
-            padB = tacticsData.paddingBottom!!
+            padS = tacticsData.paddingStart
+            padE = tacticsData.paddingEnd
+            padT = tacticsData.paddingTop
+            padB = tacticsData.paddingBottom
 
-            oPadS = tacticsData.oldPaddingStart!!
-            oPadE = tacticsData.oldPaddingEnd!!
-            oPadT = tacticsData.oldPaddingTop!!
-            oPadB = tacticsData.oldPaddingBottom!!
+            oPadS = tacticsData.oldPaddingStart
+            oPadE = tacticsData.oldPaddingEnd
+            oPadT = tacticsData.oldPaddingTop
+            oPadB = tacticsData.oldPaddingBottom
         }
 
         val data = SkTacticsData(viewID, activity.localClassName, newColor, padS, padE, padT, padB, oPadS, oPadE, oPadT, oPadB)
@@ -479,7 +479,7 @@ class SkInit {
                             }
                         }
 
-                        view.setPadding(paddingStart, paddingTop, paddingEnd, paddingBottom)
+                        view.setPadding(newPS, newPT, newPE, newPB)
                         val tacticsData = SkTacticsData(viewID, activity.localClassName, getViewColor(view), newPS, newPE, newPT, newPB, paddingStart, paddingEnd, paddingTop, paddingBottom)
                         db.saveTacticsData(tacticsData)
 
