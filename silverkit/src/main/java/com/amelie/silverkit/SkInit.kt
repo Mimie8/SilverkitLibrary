@@ -202,15 +202,15 @@ class SkInit {
 
                 if(result != null){
                     changeBrightnessLevel(view, viewColor, result, viewID, activity)
-                    Log.d("info", " Apply Color Contrast Tactic : SUCCESSFUL ")
+                    Log.d("info", " AapplyColorContrastTactic : SUCCESSFUL ")
                 }
             } else {
-                Log.d("info", " Apply Color Contrast Tactic : ERROR (NO BACKGROUND COLOR TO CHANGE) ")
+                Log.d("info", " applyColorContrastTactic : ERROR (NO BACKGROUND COLOR TO CHANGE) ")
             }
 
 
         } else {
-            Log.d("info", " Apply Color Contrast Tactic : NOT NECESSARY ")
+            Log.d("info", " applyColorContrastTactic : NOT NECESSARY ")
         }
     }
 
@@ -455,13 +455,15 @@ class SkInit {
             params.height = height + sizeJump
             view.layoutParams = params
 
+            Log.d("info", " applyResizeTactic : WIDTH $width HEIGHT $height ")
+
             val newData = SkTacticsData(viewID, activity.localClassName, color, paddingStart, paddingEnd, paddingTop, paddingBottom, oldPaddingStart, oldPaddingEnd, oldPaddingTop, oldPaddingBottom, width + sizeJump, height + sizeJump)
             db.saveTacticsData(newData)
 
-            Log.d("info", " Apply Resize Tactic : SUCCESSFUL ")
+            Log.d("info", " applyResizeTactic : SUCCESSFUL ")
 
         } else {
-            Log.d("info", " Apply Resize Tactic : NOT NECESSARY ")
+            Log.d("info", " applyResizeTactic : NOT NECESSARY ")
         }
     }
 
@@ -554,6 +556,8 @@ class SkInit {
         if(data != null){
             val width = data.viewWidth
             val height = data.viewHeight
+
+            Log.d("info", " reduceResizeTactic : WIDTH $width HEIGHT $height ")
 
 
             val params = view.layoutParams
