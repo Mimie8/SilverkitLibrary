@@ -761,6 +761,7 @@ class SkInit {
 
         return if(!isFixedSize(view)){
             view.measure(view.width, view.height)
+            Log.d("info", " getViewSize : view.width ${view.width} view.height ${view.height} view.measuredWidth ${view.measuredWidth} view.measuredHeight ${view.measuredHeight}")
             listOf(dpsToPixels(view.measuredWidth,context), dpsToPixels(view.measuredHeight,context))
         } else {
             listOf(view.width, view.height)
