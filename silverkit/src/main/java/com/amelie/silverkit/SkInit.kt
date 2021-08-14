@@ -82,7 +82,6 @@ class SkInit {
                 params.width  = width
                 params.height = height
                 viewElement.layoutParams = params
-                Log.d("info", "Restore size of view : width $width height $height ")
             }
         }
 
@@ -200,7 +199,7 @@ class SkInit {
 
                 if(result != null){
                     changeBrightnessLevel(view, viewColor, result, viewID, activity)
-                    Log.d("info", " AapplyColorContrastTactic : SUCCESSFUL ")
+                    Log.d("info", " applyColorContrastTactic : SUCCESSFUL ")
                 }
             } else {
                 Log.d("info", " applyColorContrastTactic : ERROR (NO BACKGROUND COLOR TO CHANGE) ")
@@ -386,8 +385,6 @@ class SkInit {
             height = tacticsData.viewHeight
         }
 
-        Log.d("info", " changeBrightnessLevel : width $width height $height ")
-
         val data = SkTacticsData(viewID, activity.localClassName, newColor, padS, padE, padT, padB, oPadS, oPadE, oPadT, oPadB, width, height)
         db.saveTacticsData(data)
         db.close()
@@ -400,7 +397,7 @@ class SkInit {
         val resourceID = activity.baseContext.resources.getIdentifier(viewID, "layout", activity.packageName)
         val view = activity.window?.decorView?.findViewById(resourceID) as View
 
-        val sizeJump = dpsToPixels(4, activity.baseContext)
+        val sizeJump = dpsToPixels(2, activity.baseContext)
 
         if(checkResizeTactic(view, activity, newAnalysisData, oldAnalysisData,sizeJump)){
 
@@ -450,8 +447,6 @@ class SkInit {
             val newWidth = width + sizeJump
             val newHeight = height + sizeJump
 
-            Log.d("info", " applyResizeTactic : width $newWidth height $newHeight ")
-
             val params = view.layoutParams
             params.width  = newWidth
             params.height = newHeight
@@ -494,8 +489,6 @@ class SkInit {
                         currentWidth = view.width
                         currentHeight = view.height
                     }
-
-                    Log.d("info", " checkResizeTactic : width $currentWidth height $currentHeight ")
 
                     val maxSizeRatio = 1.5f
                     val thresholdDist = 10
@@ -570,8 +563,6 @@ class SkInit {
 
             val newWidth = width - sizeJump
             val newHeight = height - sizeJump
-
-            Log.d("info", " applyGravityCenterTactic : width $newWidth height $newHeight ")
 
             val params = view.layoutParams
             params.width  = newWidth
@@ -672,8 +663,6 @@ class SkInit {
                             }
                         }
 
-                        Log.d("info", " applyGravityCenterTactic : width $width height $height ")
-
 
                         view.setPadding(newPS, newPT, newPE, newPB)
                         val tacticsData = SkTacticsData(viewID, activity.localClassName, getViewColor(view), newPS, newPE, newPT, newPB, paddingStart, paddingEnd, paddingTop, paddingBottom, width, height)
@@ -752,8 +741,6 @@ class SkInit {
             view.setPadding(padS, padT, padE, padB)
             val newData = SkTacticsData(viewID, activity.localClassName, data.color, padS, padE, padT, padB, data.paddingStart, data.paddingEnd, data.paddingTop, data.paddingBottom, data.viewWidth, data.viewHeight)
             db.saveTacticsData(newData)
-
-            Log.d("info", " reduceGravityCenterTactic : width ${view.width} height ${view.height} ")
 
             Log.d("info", " reduceGravityCenterTactic : REDUCE TACTIC ")
         } else {
