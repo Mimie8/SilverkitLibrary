@@ -367,7 +367,7 @@ class SkInit {
         var oPadE = 0
         var oPadT = 0
         var oPadB = 0
-        val size = getViewSize(view)
+        val size = getViewSize(view, activity.baseContext)
         var width = size[0]
         var height = size[1]
 
@@ -441,7 +441,7 @@ class SkInit {
                 oldPaddingEnd = 0
                 oldPaddingTop = 0
                 oldPaddingBottom = 0
-                val size = getViewSize(view)
+                val size = getViewSize(view, context)
                 width = size[0]
                 height = size[1]
             }
@@ -489,7 +489,7 @@ class SkInit {
                         currentWidth = tacticsData.viewWidth
                         currentHeight = tacticsData.viewHeight
                     } else {
-                        val size = getViewSize(view)
+                        val size = getViewSize(view, context)
                         currentWidth = size[0]
                         currentHeight = size[1]
                     }
@@ -618,7 +618,7 @@ class SkInit {
                         paddingEnd = view.paddingEnd
                         paddingTop = view.paddingTop
                         paddingBottom = view.paddingBottom
-                        val size = getViewSize(view)
+                        val size = getViewSize(view,activity.baseContext)
                         width = size[0]
                         height = size[1]
                     } else {
@@ -757,11 +757,11 @@ class SkInit {
         return !isWrapContent && !isMatchParent && !isFillParent
     }
 
-    private fun getViewSize(view:View) : List<Int>{
+    private fun getViewSize(view:View, context: Context) : List<Int>{
 
         return if(!isFixedSize(view)){
             view.measure(view.width, view.height)
-            listOf(view.measuredWidth, view.measuredHeight)
+            listOf(dpsToPixels(view.measuredWidth,context), dpsToPixels(view.measuredHeight,context))
         } else {
             listOf(view.width, view.height)
         }
@@ -1023,7 +1023,7 @@ class SkInit {
                     val viewLocal = getViewLocal(v)
                     val coord = getViewCoord(v)
                     val color = getViewColor(v)
-                    val size = getViewSize(v)
+                    val size = getViewSize(v, activity.baseContext)
                     val width = size[0]
                     val height = size[1]
                     val viewData = SkCoordsData(viewID, viewLocal, coord[0], coord[1], color, width, height)
