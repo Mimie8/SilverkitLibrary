@@ -37,7 +37,6 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
         const val C_DEVICE_DATA_ID = "ID"
         const val C_SCREEN_WIDTH = "SCREEN_WIDTH"
         const val C_SCREEN_HEIGHT = "SCREEN_HEIGHT"
-        const val C_CORRECTIONS_TIMESTAMP = "CORRECTIONS_TIMESTAMP"
 
         const val T_ANALYSIS_DATA = "ANALYSIS_DATA_TABLE"
         const val C_ANALYSIS_DATA_ID = "ID"
@@ -61,6 +60,11 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
         const val C_OLD_PADDING_BOTTOM = "OLD_PADDING_BOTTOM"
         const val C_VIEW_WIDTH = "VIEW_WIDTH"
         const val C_VIEW_HEIGHT = "VIEW_HEIGHT"
+
+        const val T_ANALYSIS_TIMESTAMPS = "ANALYSIS_TIMESTAMP"
+        const val C_ANALYSIS_TIMESTAMP_ID = "ID"
+        const val C_ACTIVITY = "ACTIVITY"
+        const val C_CORRECTIONS_TIMESTAMP = "CORRECTIONS_TIMESTAMP"
     }
 
     // This is called the first time a database is accessed. There should be code in there to create a new db
@@ -68,16 +72,17 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
 
         val createClickEventTable = "CREATE TABLE $T_CLICK_EVENTS ($C_CLICK_ID INTEGER PRIMARY KEY AUTOINCREMENT, $C_VIEW_ID TEXT, $C_VIEW_TYPE TEXT, $C_VIEW_ACTIVTY TEXT, $C_CLICK_X INT, $C_CLICK_Y INT, $C_TIMESTAMP TEXT)"
         val createViewDataTable = "CREATE TABLE $T_VIEW_DATA ($C_VIEW_DATA_ID INTEGER PRIMARY KEY AUTOINCREMENT, $C_VIEW_ID TEXT, $C_VIEW_ACTIVTY TEXT, $C_TOPLEFT_X INT, $C_TOPLEFT_Y INT, $C_BOTTOMRIGHT_X INT, $C_BOTTOMRIGHT_Y INT, $C_BASE_COLOR INT, $C_BASE_SIZE_WIDTH INT, $C_BASE_SIZE_HEIGHT INT)"
-        val createDeviceDataTable = "CREATE TABLE $T_DEVICE_DATA ($C_DEVICE_DATA_ID INTEGER PRIMARY KEY AUTOINCREMENT, $C_SCREEN_WIDTH INT, $C_SCREEN_HEIGHT INT, $C_CORRECTIONS_TIMESTAMP TEXT)"
+        val createDeviceDataTable = "CREATE TABLE $T_DEVICE_DATA ($C_DEVICE_DATA_ID INTEGER PRIMARY KEY AUTOINCREMENT, $C_SCREEN_WIDTH INT, $C_SCREEN_HEIGHT INT)"
         val createAnalysisDataTable = "CREATE TABLE $T_ANALYSIS_DATA ($C_ANALYSIS_DATA_ID INTEGER PRIMARY KEY AUTOINCREMENT, $C_VIEW_ID TEXT, $C_VIEW_ACTIVTY TEXT, $C_ERROR_RATIO TEXT, $C_AVERAGE_DIST_FROM_BORDER TEXT, $C_DIST_GRAVITY_CENTER TEXT, $C_GRAVITY_CENTER_X INT, $C_GRAVITY_CENTER_Y INT)"
         val createTacticsDataTable = "CREATE TABLE $T_TACTICS_DATA ($C_TACTICS_DATA_ID INTEGER PRIMARY KEY AUTOINCREMENT, $C_VIEW_ID TEXT, $C_VIEW_ACTIVTY TEXT, $C_VIEW_COLOR INT, $C_PADDING_START INT, $C_PADDING_END INT, $C_PADDING_TOP INT, $C_PADDING_BOTTOM INT, $C_OLD_PADDING_START INT, $C_OLD_PADDING_END INT, $C_OLD_PADDING_TOP INT, $C_OLD_PADDING_BOTTOM INT, $C_VIEW_WIDTH INT, $C_VIEW_HEIGHT INT)"
-
+        val createAnalysisTimestampTable = "CREATE TABLE $T_ANALYSIS_TIMESTAMPS ($C_ANALYSIS_TIMESTAMP_ID INTEGER PRIMARY KEY AUTOINCREMENT, $C_ACTIVITY TEXT, $C_CORRECTIONS_TIMESTAMP TEXT)"
 
         db.execSQL(createClickEventTable)
         db.execSQL(createViewDataTable)
         db.execSQL(createDeviceDataTable)
         db.execSQL(createAnalysisDataTable)
         db.execSQL(createTacticsDataTable)
+        db.execSQL(createAnalysisTimestampTable)
     }
 
     // It is called if the db version number changes. It prevents previous users apps from breaking when you change the db design
@@ -88,6 +93,7 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
         db.execSQL("DROP TABLE IF EXISTS $T_DEVICE_DATA")
         db.execSQL("DROP TABLE IF EXISTS $T_ANALYSIS_DATA")
         db.execSQL("DROP TABLE IF EXISTS $T_TACTICS_DATA")
+        db.execSQL("DROP TABLE IF EXISTS $T_ANALYSIS_TIMESTAMPS")
 
         onCreate(db)
     }
@@ -156,21 +162,20 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
     }
 
     // Add hardware data to db
-    fun addDeviceData(screen_width:Int, screen_height:Int, last_corrections:String) : Boolean{
+    fun addDeviceData(screen_width:Int, screen_height:Int) : Boolean{
 
         val db = this.writableDatabase
         val cv = ContentValues()
 
         cv.put(C_SCREEN_WIDTH, screen_width)
         cv.put(C_SCREEN_HEIGHT, screen_height)
-        cv.put(C_CORRECTIONS_TIMESTAMP, last_corrections)
 
         val result = db.insert(T_DEVICE_DATA, null, cv)
         db.close()
 
         return if(result == -1L){
             Log.d("info", "DATABASE SK : ERROR WHILE SAVING THE DEVICE DATA")
-            Log.d("info", "DATABASE SK : $screen_width, $screen_height, $last_corrections")
+            Log.d("info", "DATABASE SK : $screen_width, $screen_height")
             false
         } else {
             Log.d("info", "DATABASE SK : SUCCESSFULLY SAVED THE DEVICE DATA")
@@ -281,8 +286,11 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
     }
 
     // Start analysis
-    fun isAnalysisTime() : Boolean{
+    fun isAnalysisTime(activity: String) : Boolean{
         // Change condition of analysis start
+
+        // Ex : If last analysis timestamp of this activity is 5 days ago
+        // Do not forget to check if the line in table T_ANALYSIS_TIMESTAMPS exists with this activity before getting the timestamp
         return true
     }
 
@@ -396,10 +404,9 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
             if(cursor.moveToFirst()){
                 val width = cursor.getInt(1)
                 val height = cursor.getInt(2)
-                val correctionTimestamp = cursor.getString(3)
                 cursor.close()
                 db.close()
-                listOf(width, height, correctionTimestamp)
+                listOf(width, height)
             } else {
                 cursor.close()
                 db.close()
@@ -441,24 +448,52 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
 
     }
 
-    fun updateLastCorrectionTimestamp(newTimestamp : String) : Boolean{
-        val db = this.writableDatabase
-        val cv = ContentValues()
-        cv.put(C_CORRECTIONS_TIMESTAMP, newTimestamp)
+    fun updateLastCorrectionTimestamp(newTimestamp : String, activity: String) : Boolean{
 
-        val where = "id=?"
-        val whereArgs = arrayOf(java.lang.String.valueOf(1))
+        // Check if correction timestamp data for this activity already exist, if yes update data else add new row of data
 
-        return try{
-            db.update(T_DEVICE_DATA, cv, where, whereArgs)
+        val result = isDataAlreadyInDB(T_ANALYSIS_TIMESTAMPS, C_ACTIVITY, activity)
+        if(result){
+
+            // Update correction timestamp data in activity
+            val db = this.writableDatabase
+            val cv = ContentValues()
+            cv.put(C_CORRECTIONS_TIMESTAMP, newTimestamp)
+
+            val where = "$C_ACTIVITY=?"
+            val whereArgs = arrayOf(activity)
+
+            return try{
+                db.update(T_ANALYSIS_TIMESTAMPS, cv, where, whereArgs)
+                db.close()
+                Log.d("info", "DATABASE SK : SUCCESSFULLY UPDATED THE LAST CORRECTION TIMESTAMP")
+                true
+            } catch (e: Exception){
+                db.close()
+                Log.d("info", "DATABASE SK : ERROR WHILE UPDATING THE LAST CORRECTION TIMESTAMP")
+                false
+            }
+
+        } else {
+            // Create row to add correction timestamp data
+            val db = this.writableDatabase
+            val cv = ContentValues()
+
+            cv.put(C_ACTIVITY, activity)
+            cv.put(C_CORRECTIONS_TIMESTAMP, newTimestamp)
+
+            val resultAdd = db.insert(T_ANALYSIS_TIMESTAMPS, null, cv)
             db.close()
-            Log.d("info", "DATABASE SK : SUCCESSFULLY UPDATED THE LAST CORRECTION TIMESTAMP")
-            true
-        } catch (e: Exception){
-            db.close()
-            Log.d("info", "DATABASE SK : ERROR WHILE UPDATING THE LAST CORRECTION TIMESTAMP")
-            false
+
+            return if(resultAdd == -1L){
+                Log.d("info", "DATABASE SK : ERROR WHILE SAVING THE CORRECTION TIMESTAMP OF $activity")
+                false
+            } else {
+                Log.d("info", "DATABASE SK : SUCCESSFULLY SAVED THE CORRECTION TIMESTAMP OF $activity")
+                true
+            }
         }
+
     }
 
     fun getViewBaseColor(viewID : String, activity: String) : Int?{

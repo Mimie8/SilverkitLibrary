@@ -104,7 +104,7 @@ class SkInit {
         val clicks = dbHelper.getClicksDataOfActivity(activityStr, lastCorrectionTimestamp)
 
         // Look if it's time to analyse
-        if(dbHelper.isAnalysisTime()){
+        if(dbHelper.isAnalysisTime(activityStr)){
 
             Log.d("info", "applyCorrections : ANALYSING DATA ... ")
 
@@ -156,7 +156,7 @@ class SkInit {
 
             // Change last correction date in DB
             val time = Timestamp(System.currentTimeMillis())
-            dbHelper.updateLastCorrectionTimestamp(time.toString())
+            dbHelper.updateLastCorrectionTimestamp(time.toString(), activityStr)
 
             Log.d("info", "applyCorrections : DATA ANALYSED ")
 
@@ -506,9 +506,9 @@ class SkInit {
                             val oldRatio = oldAnalysisData.errorRatio
                             val oldDist = oldAnalysisData.averageDistFromBorder
 
-                            if(oldRatio >= newRatio && oldDist > newDist){
+                            if(oldRatio >= newRatio && oldDist >= newDist){
                                 // Tactic works
-                                Log.d("info", " checkResizeTactic : CONTINUE TO APPLY TACTIC ${newRatio > 0.1f}")
+                                Log.d("info", " checkResizeTactic : CONTINUE TO APPLY TACTIC ${oldRatio >= newRatio && oldDist >= newDist}")
                                 newAnalysisData.errorRatio > thresholdRatio && newAnalysisData.averageDistFromBorder > thresholdDist
                             } else {
                                 // Tactics doesn't work
@@ -742,26 +742,6 @@ class SkInit {
             Log.d("info", " reduceGravityCenterTactic : IMPOSSIBLE TO REDUCE TACTIC, ERROR GETTING OLD VIEW PADDINGS")
         }
         db.close()
-    }
-
-    private fun isFixedSize(view: View) : Boolean{
-        val lp = view.layoutParams
-        val isWrapContent = (lp.height == ViewGroup.LayoutParams.WRAP_CONTENT || lp.width == ViewGroup.LayoutParams.WRAP_CONTENT)
-        val isMatchParent = (lp.height == ViewGroup.LayoutParams.MATCH_PARENT || lp.width == ViewGroup.LayoutParams.MATCH_PARENT)
-        val isFillParent = (lp.height == ViewGroup.LayoutParams.FILL_PARENT || lp.width == ViewGroup.LayoutParams.FILL_PARENT)
-
-        return !isWrapContent && !isMatchParent && !isFillParent
-    }
-
-    private fun getViewSize(view:View, context: Context) : List<Int>{
-
-        return if(!isFixedSize(view)){
-            view.measure(view.width, view.height)
-            Log.d("info", " getViewSize : view.width ${view.width} view.height ${view.height} view.measuredWidth ${view.measuredWidth} view.measuredHeight ${view.measuredHeight}")
-            listOf(dpsToPixels(view.measuredWidth,context), dpsToPixels(view.measuredHeight,context))
-        } else {
-            listOf(view.width, view.height)
-        }
     }
 
     private fun dpsToPixels(dps : Int, context: Context) : Int{
@@ -1119,8 +1099,7 @@ class SkInit {
         val context = activity.baseContext
 
         val dbHelper =  DatabaseHelper(context)
-        val time = Timestamp(System.currentTimeMillis())
-        dbHelper.addDeviceData(hardwareData.screenWidth, hardwareData.screenHeight, time.toString())
+        dbHelper.addDeviceData(hardwareData.screenWidth, hardwareData.screenHeight)
 
     }
 
