@@ -99,12 +99,17 @@ class SkInit {
         // Get views of this activity
         val viewsData = dbHelper.getViewsDataOfActivity(activityStr)
 
-        // Get clicks data done since last correction in this activity
-        val lastCorrectionTimestamp = deviceData[2] as String
-        val clicks = dbHelper.getClicksDataOfActivity(activityStr, lastCorrectionTimestamp)
+        // Get last correction timestamp of activity
+        var lastCorrectionTimestamp = dbHelper.getLastCorrectionTimestampOfActivity(activityStr)
 
         // Look if it's time to analyse
         if(dbHelper.isAnalysisTime(activityStr)){
+
+            // Get clicks data done since last correction in this activity
+            if(lastCorrectionTimestamp == null){
+                lastCorrectionTimestamp = Timestamp(System.currentTimeMillis()).toString()
+            }
+            val clicks = dbHelper.getClicksDataOfActivity(activityStr, lastCorrectionTimestamp)
 
             Log.d("info", "applyCorrections : ANALYSING DATA ... ")
 

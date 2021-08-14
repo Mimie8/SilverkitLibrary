@@ -496,6 +496,28 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
 
     }
 
+    fun getLastCorrectionTimestampOfActivity(activity: String) : String?{
+        val db = this.readableDatabase
+        val query = "SELECT * FROM $T_ANALYSIS_TIMESTAMPS WHERE $C_ACTIVITY = \'$activity\'"
+
+        return try{
+            val cursor = db.rawQuery(query, null)
+            if(cursor.moveToFirst()){
+                val time = cursor.getString(2)
+                cursor.close()
+                db.close()
+                time
+            } else {
+                cursor.close()
+                db.close()
+                null
+            }
+        } catch (e: Exception){
+            db.close()
+            null
+        }
+    }
+
     fun getViewBaseColor(viewID : String, activity: String) : Int?{
         val db = this.readableDatabase
         val query = "SELECT * FROM $T_VIEW_DATA WHERE $C_VIEW_ID = \'$viewID\' AND $C_VIEW_ACTIVTY = '$activity'"
