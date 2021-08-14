@@ -367,8 +367,9 @@ class SkInit {
         var oPadE = 0
         var oPadT = 0
         var oPadB = 0
-        var width = view.width
-        var height = view.height
+        val size = getViewSize(view)
+        var width = size[0]
+        var height = size[1]
 
         if(tacticsData != null){
             padS = tacticsData.paddingStart
@@ -440,8 +441,9 @@ class SkInit {
                 oldPaddingEnd = 0
                 oldPaddingTop = 0
                 oldPaddingBottom = 0
-                width = view.width
-                height = view.height
+                val size = getViewSize(view)
+                width = size[0]
+                height = size[1]
             }
 
             val newWidth = width + sizeJump
@@ -470,8 +472,9 @@ class SkInit {
         val viewData = db.getViewData(newAnalysisData.viewID, activity.localClassName)
         val tacticsData = db.getTacticsDataOfView(newAnalysisData.viewID, activity.localClassName)
 
-        // we need to have access to basic size of view and view need to have a fixed size
-        if(isFixedSize(view)){
+        // if view n'a pas encore de tactique ou si la tactique de couleur a déjà été appliquée, alors on peut appliquer la resize tactic
+        if(tacticsData == null || tacticsData.color != null){
+            // we need to have access to basic size of view
             if(viewData != null){
                 val baseWidth = viewData.baseSizeWidth
                 val baseHeight = viewData.baseSizeHeight
@@ -486,15 +489,16 @@ class SkInit {
                         currentWidth = tacticsData.viewWidth
                         currentHeight = tacticsData.viewHeight
                     } else {
-                        currentWidth = view.width
-                        currentHeight = view.height
+                        val size = getViewSize(view)
+                        currentWidth = size[0]
+                        currentHeight = size[1]
                     }
 
-                    val maxSizeRatio = 1.5f
+                    val maxSizeRatio = 1.3f
                     val thresholdDist = 10
                     val thresholdRatio = 0.1f
 
-                    // If applying the tactic doesn't change the size of the view of more than 1.5 times the basic size
+                    // If applying the tactic doesn't change the size of the view of more than 1.3 times the basic size
                     if((currentWidth + sizeJump <= baseWidth * maxSizeRatio) && (currentHeight + sizeJump <= baseHeight * maxSizeRatio )){
 
                         val newRatio = newAnalysisData.errorRatio
@@ -589,102 +593,97 @@ class SkInit {
         val viewsData = db.getViewsDataOfActivity(activity.localClassName)
         val tactic = db.getTacticsDataOfView(viewID, activity.localClassName)
 
-        // view need to have a fixed size
-        if(isFixedSize(view)){
-            // If condition for applying tactics are met
-            if(checkGravityCenterTactic(view, activity, newAnalysisData, oldAnalysisData)){
+        // If condition for applying tactics are met
+        if(checkGravityCenterTactic(view, activity, newAnalysisData, oldAnalysisData)){
 
-                val gravityCenterX = newAnalysisData.gravityCenterX
-                val gravityCenterY = newAnalysisData.gravityCenterY
-                val delimitations = viewDelimitations(newAnalysisData.viewID, activity.localClassName, viewsData)
+            val gravityCenterX = newAnalysisData.gravityCenterX
+            val gravityCenterY = newAnalysisData.gravityCenterY
+            val delimitations = viewDelimitations(newAnalysisData.viewID, activity.localClassName, viewsData)
 
-                if(delimitations != null){
+            if(delimitations != null){
 
-                    val centerOfView = centerOfView(delimitations)
+                val centerOfView = centerOfView(delimitations)
 
-                    if(centerOfView != null){
+                if(centerOfView != null){
 
-                        val paddingStart : Int
-                        val paddingEnd: Int
-                        val paddingTop: Int
-                        val paddingBottom: Int
-                        val width : Int
-                        val height : Int
+                    val paddingStart : Int
+                    val paddingEnd: Int
+                    val paddingTop: Int
+                    val paddingBottom: Int
+                    val width : Int
+                    val height : Int
 
-                        if(tactic == null){
-                            paddingStart = view.paddingStart
-                            paddingEnd = view.paddingEnd
-                            paddingTop = view.paddingTop
-                            paddingBottom = view.paddingBottom
-                            width = view.width
-                            height = view.height
-                        } else {
-                            paddingStart = tactic.paddingStart
-                            paddingEnd = tactic.paddingEnd
-                            paddingTop = tactic.paddingTop
-                            paddingBottom = tactic.paddingBottom
-                            width = tactic.viewWidth
-                            height = tactic.viewHeight
-                        }
-
-                        var newPS = paddingStart
-                        var newPE = paddingEnd
-                        var newPT = paddingTop
-                        var newPB = paddingBottom
-
-                        // S'il y a la place, add paddings
-
-                        if(gravityCenterX < centerOfView[0]){
-                            // left : move right
-                            if(paddingStart < width){
-                                newPS += 4
-                                Log.d("info", " applyGravityCenterTactic : MOVE RIGHT ")
-                            }
-                        }
-                        if(gravityCenterX > centerOfView[0]){
-                            // right : move left
-                            if(paddingEnd < width){
-                                newPE += 4
-                                Log.d("info", " applyGravityCenterTactic : MOVE LEFT ")
-                            }
-                        }
-                        if(gravityCenterY < centerOfView[1]){
-                            // top : move bottom
-                            if(paddingTop < height){
-                                newPT += 4
-                                Log.d("info", " applyGravityCenterTactic : MOVE BOTTOM ")
-                            }
-                        }
-                        if(gravityCenterY > centerOfView[1]){
-                            // bottom : move top
-                            if(paddingBottom < height){
-                                newPB += 4
-                                Log.d("info", " applyGravityCenterTactic : MOVE TOP ")
-                            }
-                        }
-
-
-                        view.setPadding(newPS, newPT, newPE, newPB)
-                        val tacticsData = SkTacticsData(viewID, activity.localClassName, getViewColor(view), newPS, newPE, newPT, newPB, paddingStart, paddingEnd, paddingTop, paddingBottom, width, height)
-                        db.saveTacticsData(tacticsData)
-
-                        Log.d("info", " applyGravityCenterTactic : SUCCESSFUL ")
-
+                    if(tactic == null){
+                        paddingStart = view.paddingStart
+                        paddingEnd = view.paddingEnd
+                        paddingTop = view.paddingTop
+                        paddingBottom = view.paddingBottom
+                        val size = getViewSize(view)
+                        width = size[0]
+                        height = size[1]
                     } else {
-                        Log.d("info", " applyGravityCenterTactic : ERROR WHILE GETTING VIEW CENTER ")
+                        paddingStart = tactic.paddingStart
+                        paddingEnd = tactic.paddingEnd
+                        paddingTop = tactic.paddingTop
+                        paddingBottom = tactic.paddingBottom
+                        width = tactic.viewWidth
+                        height = tactic.viewHeight
                     }
 
+                    var newPS = paddingStart
+                    var newPE = paddingEnd
+                    var newPT = paddingTop
+                    var newPB = paddingBottom
+
+                    // S'il y a la place, add paddings
+
+                    if(gravityCenterX < centerOfView[0]){
+                        // left : move right
+                        if(paddingStart < width){
+                            newPS += 4
+                            Log.d("info", " applyGravityCenterTactic : MOVE RIGHT ")
+                        }
+                    }
+                    if(gravityCenterX > centerOfView[0]){
+                        // right : move left
+                        if(paddingEnd < width){
+                            newPE += 4
+                            Log.d("info", " applyGravityCenterTactic : MOVE LEFT ")
+                        }
+                    }
+                    if(gravityCenterY < centerOfView[1]){
+                        // top : move bottom
+                        if(paddingTop < height){
+                            newPT += 4
+                            Log.d("info", " applyGravityCenterTactic : MOVE BOTTOM ")
+                        }
+                    }
+                    if(gravityCenterY > centerOfView[1]){
+                        // bottom : move top
+                        if(paddingBottom < height){
+                            newPB += 4
+                            Log.d("info", " applyGravityCenterTactic : MOVE TOP ")
+                        }
+                    }
+
+
+                    view.setPadding(newPS, newPT, newPE, newPB)
+                    val tacticsData = SkTacticsData(viewID, activity.localClassName, getViewColor(view), newPS, newPE, newPT, newPB, paddingStart, paddingEnd, paddingTop, paddingBottom, width, height)
+                    db.saveTacticsData(tacticsData)
+
+                    Log.d("info", " applyGravityCenterTactic : SUCCESSFUL ")
+
                 } else {
-                    Log.d("info", " applyGravityCenterTactic : ERROR WHILE GETTING VIEW DELIMITATIONS ")
+                    Log.d("info", " applyGravityCenterTactic : ERROR WHILE GETTING VIEW CENTER ")
                 }
 
             } else {
-                Log.d("info", " applyGravityCenterTactic : NOT NECESSARY ")
+                Log.d("info", " applyGravityCenterTactic : ERROR WHILE GETTING VIEW DELIMITATIONS ")
             }
-        } else {
-            Log.d("info", " applyGravityCenterTactic : IMPOSSIBLE TO APPLY TACTIC : VIEW DOESN'T HAVE A FIXED SIZE")
-        }
 
+        } else {
+            Log.d("info", " applyGravityCenterTactic : NOT NECESSARY ")
+        }
         db.close()
     }
 
@@ -756,6 +755,16 @@ class SkInit {
         val isFillParent = (lp.height == ViewGroup.LayoutParams.FILL_PARENT || lp.width == ViewGroup.LayoutParams.FILL_PARENT)
 
         return !isWrapContent && !isMatchParent && !isFillParent
+    }
+
+    private fun getViewSize(view:View) : List<Int>{
+
+        return if(!isFixedSize(view)){
+            view.measure(view.width, view.height)
+            listOf(view.measuredWidth, view.measuredHeight)
+        } else {
+            listOf(view.width, view.height)
+        }
     }
 
     private fun dpsToPixels(dps : Int, context: Context) : Int{
@@ -1014,8 +1023,9 @@ class SkInit {
                     val viewLocal = getViewLocal(v)
                     val coord = getViewCoord(v)
                     val color = getViewColor(v)
-                    val width = v.width
-                    val height = v.height
+                    val size = getViewSize(v)
+                    val width = size[0]
+                    val height = size[1]
                     val viewData = SkCoordsData(viewID, viewLocal, coord[0], coord[1], color, width, height)
 
                     //Save view coordinates in CSV file if the view coordinates aren't already saved
