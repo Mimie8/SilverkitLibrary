@@ -138,6 +138,7 @@ class SkInit {
 
                                 //Get new analysis data
                                 val newAnalysisData = dbHelper.getAnalysisData(view.viewID!!, activityStr)
+                                Log.d("info", "NEW ANALYSIS DATA : $newAnalysisData")
 
                                 // Apply tactics if necessary and save tactic modification of each view in bd
                                 applyTactics(activity, oldAnalysisData, newAnalysisData)
