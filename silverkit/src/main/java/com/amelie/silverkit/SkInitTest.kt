@@ -21,7 +21,7 @@ import java.sql.Timestamp
 import kotlin.math.*
 
 
-class SkInit {
+class SkInitTest {
 
     fun init(activity: Activity){
 
@@ -43,13 +43,27 @@ class SkInit {
         restoreTactics(activity)
     }
 
+    private fun getDB(dbHelper : TestDatabaseHelper) : SQLiteDatabase{
+        try {
+            dbHelper.createDataBase()
+        } catch (e: java.lang.Exception) {
+            e.printStackTrace()
+        }
+        return dbHelper.openDataBase()
+    }
+
+    private fun closeDB(dbHelper : TestDatabaseHelper, db : SQLiteDatabase){
+        db.close()
+        dbHelper.close()
+    }
+
     private fun restoreTactics(activity: Activity){
 
-        val context = activity.baseContext
-        val dbHelper =  DatabaseHelper(context)
+        val dbHelper = TestDatabaseHelper(activity.baseContext)
+        val db = getDB(dbHelper)
 
-        val viewsData = dbHelper.getViewsDataOfActivity(activity.localClassName)
-        val tacticsData = dbHelper.getTacticsDataOfActivity(activity.localClassName)
+        val viewsData = dbHelper.getViewsDataOfActivity(db, activity.localClassName)
+        val tacticsData = dbHelper.getTacticsDataOfActivity(db, activity.localClassName)
 
         for (view in viewsData){
 
@@ -89,28 +103,30 @@ class SkInit {
             }
         }
 
+        closeDB(dbHelper, db)
+
     }
 
 
     fun applyCorrections(activity: Activity){
 
-        val context = activity.baseContext
         val activityStr = activity.localClassName
-        val dbHelper =  DatabaseHelper(context)
+        val dbHelper = TestDatabaseHelper(activity.baseContext)
+        val db = getDB(dbHelper)
 
-        val deviceData = dbHelper.getDeviceData()
+        val deviceData = dbHelper.getDeviceData(db)
 
         // Get views of this activity
-        val viewsData = dbHelper.getViewsDataOfActivity(activityStr)
+        val viewsData = dbHelper.getViewsDataOfActivity(db, activityStr)
 
         // Get last correction timestamp of activity
-        var lastCorrectionTimestamp = dbHelper.getLastCorrectionTimestampOfActivity(activityStr)
+        val lastCorrectionTimestamp = dbHelper.getLastCorrectionTimestampOfActivity(db, activityStr)
 
         // Look if it's time to analyse
         if(dbHelper.isAnalysisTime(activityStr)){
 
             // Get clicks data done since last correction in this activity
-            val clicks = dbHelper.getClicksDataOfActivity(activityStr, lastCorrectionTimestamp)
+            val clicks = dbHelper.getClicksDataOfActivity(db, activityStr, lastCorrectionTimestamp)
 
             Log.d("info", "applyCorrections : ANALYSING DATA ... ")
 
@@ -137,7 +153,7 @@ class SkInit {
                                 val oldAnalysisData = analyseViewData(dbHelper, view.viewID!!, activityStr, viewDelimitations, centerOfView, clicksOnView, clicksAroundView)
 
                                 //Get new analysis data
-                                val newAnalysisData = dbHelper.getAnalysisData(view.viewID!!, activityStr)
+                                val newAnalysisData = dbHelper.getAnalysisData(db, view.viewID!!, activityStr)
 
                                 // Apply tactics if necessary and save tactic modification of each view in bd
                                 applyTactics(activity, oldAnalysisData, newAnalysisData)
@@ -162,12 +178,12 @@ class SkInit {
 
             // Change last correction date in DB
             val time = Timestamp(System.currentTimeMillis())
-            dbHelper.updateLastCorrectionTimestamp(time.toString(), activityStr)
+            dbHelper.updateLastCorrectionTimestamp(db, time.toString(), activityStr)
 
             Log.d("info", "applyCorrections : DATA ANALYSED ")
 
         }
-        dbHelper.close()
+        closeDB(dbHelper, db)
 
     }
 
@@ -230,8 +246,9 @@ class SkInit {
 
             // Get basic color of view
             val context = activity.baseContext
-            val dbHelper =  DatabaseHelper(context)
-            val baseColor = dbHelper.getViewBaseColor(newAnalysisData.viewID, activity.localClassName)
+            val dbHelper = TestDatabaseHelper(activity.baseContext)
+            val db = getDB(dbHelper)
+            val baseColor = dbHelper.getViewBaseColor(db, newAnalysisData.viewID, activity.localClassName)
 
             return if((oldRatio >= newRatio)){
                 // La tactique fonctionne
@@ -350,7 +367,8 @@ class SkInit {
 
     private fun changeBrightnessLevel(view:View, viewColor: Int, lighten:Boolean, viewID: String, activity: Activity){
 
-        val db =  DatabaseHelper(activity.baseContext)
+        val dbHelper = TestDatabaseHelper(activity.baseContext)
+        val db = getDB(dbHelper)
 
 
         val newColor : Int
@@ -364,7 +382,7 @@ class SkInit {
 
         view.setBackgroundColor(newColor)
 
-        val tacticsData = db.getTacticsDataOfView(viewID, activity.localClassName)
+        val tacticsData = dbHelper.getTacticsDataOfView(db, viewID, activity.localClassName)
         var padS = view.paddingStart
         var padE = view.paddingEnd
         var padT = view.paddingTop
@@ -392,8 +410,8 @@ class SkInit {
         }
 
         val data = SkTacticsData(viewID, activity.localClassName, newColor, padS, padE, padT, padB, oPadS, oPadE, oPadT, oPadB, width, height)
-        db.saveTacticsData(data)
-        db.close()
+        dbHelper.saveTacticsData(db, data)
+        closeDB(dbHelper, db)
 
     }
 
@@ -407,10 +425,10 @@ class SkInit {
 
         if(checkResizeTactic(view, activity, newAnalysisData, oldAnalysisData,sizeJump)){
 
-            val context = activity.baseContext
-            val db =  DatabaseHelper(context)
+            val dbHelper = TestDatabaseHelper(activity.baseContext)
+            val db = getDB(dbHelper)
 
-            val tactic = db.getTacticsDataOfView(newAnalysisData.viewID, activity.localClassName)
+            val tactic = dbHelper.getTacticsDataOfView(db, newAnalysisData.viewID, activity.localClassName)
 
             val color : Int?
             val paddingStart : Int
@@ -459,7 +477,9 @@ class SkInit {
             view.layoutParams = params
 
             val newData = SkTacticsData(viewID, activity.localClassName, color, paddingStart, paddingEnd, paddingTop, paddingBottom, oldPaddingStart, oldPaddingEnd, oldPaddingTop, oldPaddingBottom, newWidth, newHeight)
-            db.saveTacticsData(newData)
+            dbHelper.saveTacticsData(db, newData)
+
+            closeDB(dbHelper,db)
 
             Log.d("info", " applyResizeTactic : SUCCESSFUL ")
 
@@ -470,11 +490,11 @@ class SkInit {
 
     private fun checkResizeTactic(view:View, activity : Activity, newAnalysisData: SkAnalysisData, oldAnalysisData: SkAnalysisData?, sizeJump: Int) : Boolean{
 
-        val context = activity.baseContext
-        val db =  DatabaseHelper(context)
+        val dbHelper = TestDatabaseHelper(activity.baseContext)
+        val db = getDB(dbHelper)
 
-        val viewData = db.getViewData(newAnalysisData.viewID, activity.localClassName)
-        val tacticsData = db.getTacticsDataOfView(newAnalysisData.viewID, activity.localClassName)
+        val viewData = dbHelper.getViewData(db, newAnalysisData.viewID, activity.localClassName)
+        val tacticsData = dbHelper.getTacticsDataOfView(db, newAnalysisData.viewID, activity.localClassName)
 
         // if view n'a pas encore de tactique ou si la tactique de couleur a déjà été appliquée, alors on peut appliquer la resize tactic
         if(tacticsData == null || tacticsData.color != null){
@@ -556,13 +576,15 @@ class SkInit {
         } else {
             Log.d("info", "checkResizeTactic : VIEW ${newAnalysisData.viewID} IN ACTIVITY ${newAnalysisData.viewLocal} DOESN'T HAVE A FIXED SIZE ")
         }
+        closeDB(dbHelper, db)
         return false
     }
 
     private fun reduceResizeTactic(viewID : String, activity : Activity, view : View, newAnalysisData: SkAnalysisData, sizeJump : Int){
 
-        val db =  DatabaseHelper(activity.baseContext)
-        val data = db.getTacticsDataOfView(newAnalysisData.viewID, newAnalysisData.viewLocal)
+        val dbHelper = TestDatabaseHelper(activity.baseContext)
+        val db = getDB(dbHelper)
+        val data = dbHelper.getTacticsDataOfView(db, newAnalysisData.viewID, newAnalysisData.viewLocal)
 
         if(data != null){
             val width = data.viewWidth
@@ -577,13 +599,13 @@ class SkInit {
             view.layoutParams = params
 
             val newData = SkTacticsData(viewID, activity.localClassName, data.color, data.paddingStart, data.paddingEnd, data.paddingTop, data.paddingBottom, data.oldPaddingStart, data.oldPaddingEnd, data.oldPaddingTop, data.oldPaddingBottom, newWidth, newHeight)
-            db.saveTacticsData(newData)
+            dbHelper.saveTacticsData(db, newData)
 
             Log.d("info", " reduceResizeTactic : REDUCE TACTIC ")
         } else {
             Log.d("info", " reduceResizeTactic : IMPOSSIBLE TO REDUCE TACTIC, ERROR GETTING CURRENT VIEW SIZE")
         }
-        db.close()
+        closeDB(dbHelper, db)
     }
 
     private fun applyGravityCenterTactic(activity: Activity, newAnalysisData: SkAnalysisData, oldAnalysisData: SkAnalysisData?){
@@ -592,9 +614,10 @@ class SkInit {
         val resourceID = activity.baseContext.resources.getIdentifier(viewID, "layout", activity.packageName)
         val view = activity.window?.decorView?.findViewById(resourceID) as View
 
-        val db =  DatabaseHelper(activity.baseContext)
-        val viewsData = db.getViewsDataOfActivity(activity.localClassName)
-        val tactic = db.getTacticsDataOfView(viewID, activity.localClassName)
+        val dbHelper = TestDatabaseHelper(activity.baseContext)
+        val db = getDB(dbHelper)
+        val viewsData = dbHelper.getViewsDataOfActivity(db, activity.localClassName)
+        val tactic = dbHelper.getTacticsDataOfView(db, viewID, activity.localClassName)
 
         // If condition for applying tactics are met
         if(checkGravityCenterTactic(view, activity, newAnalysisData, oldAnalysisData)){
@@ -671,7 +694,7 @@ class SkInit {
 
                     view.setPadding(newPS, newPT, newPE, newPB)
                     val tacticsData = SkTacticsData(viewID, activity.localClassName, getViewColor(view), newPS, newPE, newPT, newPB, paddingStart, paddingEnd, paddingTop, paddingBottom, width, height)
-                    db.saveTacticsData(tacticsData)
+                    dbHelper.saveTacticsData(db, tacticsData)
 
                     Log.d("info", " applyGravityCenterTactic : SUCCESSFUL ")
 
@@ -686,7 +709,7 @@ class SkInit {
         } else {
             Log.d("info", " applyGravityCenterTactic : NOT NECESSARY ")
         }
-        db.close()
+        closeDB(dbHelper, db)
     }
 
     private fun checkGravityCenterTactic(view:View, activity : Activity, newAnalysisData: SkAnalysisData, oldAnalysisData: SkAnalysisData?): Boolean{
@@ -729,9 +752,10 @@ class SkInit {
     }
 
     private fun reduceGravityCenterTactic(viewID : String, activity: Activity, view:View, newAnalysisData: SkAnalysisData){
-        val db =  DatabaseHelper(activity.baseContext)
+        val dbHelper = TestDatabaseHelper(activity.baseContext)
+        val db = getDB(dbHelper)
 
-        val data = db.getTacticsDataOfView(newAnalysisData.viewID, newAnalysisData.viewLocal)
+        val data = dbHelper.getTacticsDataOfView(db, newAnalysisData.viewID, newAnalysisData.viewLocal)
 
         if(data != null){
             val padS = data.oldPaddingStart
@@ -741,13 +765,13 @@ class SkInit {
 
             view.setPadding(padS, padT, padE, padB)
             val newData = SkTacticsData(viewID, activity.localClassName, data.color, padS, padE, padT, padB, data.paddingStart, data.paddingEnd, data.paddingTop, data.paddingBottom, data.viewWidth, data.viewHeight)
-            db.saveTacticsData(newData)
+            dbHelper.saveTacticsData(db, newData)
 
             Log.d("info", " reduceGravityCenterTactic : REDUCE TACTIC ")
         } else {
             Log.d("info", " reduceGravityCenterTactic : IMPOSSIBLE TO REDUCE TACTIC, ERROR GETTING OLD VIEW PADDINGS")
         }
-        db.close()
+        closeDB(dbHelper, db)
     }
 
     private fun dpsToPixels(dps : Int, context: Context) : Int{
@@ -757,7 +781,9 @@ class SkInit {
 
     // -------------------- ANALYSE DATA
 
-    private fun analyseViewData(db : DatabaseHelper, viewID : String, activityStr : String, viewDelimitations : List<Int>, centerOfView : List<Int>, clicksOnView : MutableList<SkClicksData>, clicksAroundView: MutableList<SkClicksData>) : SkAnalysisData?{
+    private fun analyseViewData(dbHelper : TestDatabaseHelper, viewID : String, activityStr : String, viewDelimitations : List<Int>, centerOfView : List<Int>, clicksOnView : MutableList<SkClicksData>, clicksAroundView: MutableList<SkClicksData>) : SkAnalysisData?{
+
+        val db = getDB(dbHelper)
 
         val errorRatio = getErrorRatio(clicksOnView, clicksAroundView)
         val averageDistFromBorder = getAverageDistanceFromBorder(viewDelimitations, clicksAroundView)
@@ -765,9 +791,9 @@ class SkInit {
         val distGravityCenter = getDistGravityCenter(gravityCenter, centerOfView)
 
         val newAnalysisData = SkAnalysisData(viewID, activityStr, errorRatio, averageDistFromBorder, distGravityCenter, gravityCenter[0], gravityCenter[1])
-        val oldAnalysisData = db.getAnalysisData(viewID, activityStr)
+        val oldAnalysisData = dbHelper.getAnalysisData(db, viewID, activityStr)
 
-        db.addAnalysisData(newAnalysisData)
+        dbHelper.addAnalysisData(db, newAnalysisData)
         return oldAnalysisData
     }
 
@@ -1066,10 +1092,8 @@ class SkInit {
         Log.d("info", "VIEW ID : ${view.id}")
         if (view.id == View.NO_ID) {
             view.id = View.generateViewId()
-            Log.d("info", "RETURNED VIEW ID : ${getViewType(view).toString() + "-" + view.id}")
             return getViewType(view).toString() + "-" + view.id
         }
-        Log.d("info", "RETURNED VIEW ID : ${view.id}")
         return view.id.toString()
 
     }
@@ -1093,8 +1117,10 @@ class SkInit {
 
         val context = view.context
 
-        val dbHelper =  DatabaseHelper(context)
-        dbHelper.addViewData(viewData)
+        val dbHelper =  TestDatabaseHelper(context)
+        val db = getDB(dbHelper)
+
+        dbHelper.addViewData(db, viewData)
 
     }
 
@@ -1104,8 +1130,10 @@ class SkInit {
 
         val context = activity.baseContext
 
-        val dbHelper =  DatabaseHelper(context)
-        dbHelper.addDeviceData(hardwareData.screenWidth, hardwareData.screenHeight)
+        val dbHelper =  TestDatabaseHelper(context)
+        val db = getDB(dbHelper)
+
+        dbHelper.addDeviceData(db, hardwareData.screenWidth, hardwareData.screenHeight)
 
     }
 

@@ -1,17 +1,32 @@
-package com.amelie.silverkit
-
 import android.content.ContentValues
 import android.content.Context
+import android.content.ContextWrapper
 import android.database.sqlite.SQLiteDatabase
+import android.database.sqlite.SQLiteException
 import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
-import com.amelie.silverkit.datamanager.*
+import com.amelie.silverkit.datamanager.SkAnalysisData
+import com.amelie.silverkit.datamanager.SkClicksData
+import com.amelie.silverkit.datamanager.SkCoordsData
+import com.amelie.silverkit.datamanager.SkTacticsData
+import java.io.*
+import java.sql.SQLException
 
 
-class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase", null, 1) {
+class TestDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DB_NAME, null, 1) {
 
-    // static variables
+    private val myContext: Context = context
+    private var outFileName = ""
+    private val DB_PATH: String
+    private var db: SQLiteDatabase? = null
+
     companion object {
+        val TAG = TestDatabaseHelper::class.java.simpleName
+        var flag = 0
+
+        // Exact Name of you db file that you put in assets folder with extension.
+        var DB_NAME = "SkDatabase.db"
+
         const val T_CLICK_EVENTS = "CLICK_EVENTS_TABLE"
         const val C_CLICK_ID = "ID"
         const val C_VIEW_ID = "VIEW_ID"
@@ -65,43 +80,118 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
         const val C_ACTIVITY = "ACTIVITY"
         const val C_CORRECTIONS_TIMESTAMP = "CORRECTIONS_TIMESTAMP"
     }
-
-    // This is called the first time a database is accessed. There should be code in there to create a new db
-    override fun onCreate(db: SQLiteDatabase) {
-
-        val createClickEventTable = "CREATE TABLE $T_CLICK_EVENTS ($C_CLICK_ID INTEGER PRIMARY KEY AUTOINCREMENT, $C_VIEW_ID TEXT, $C_VIEW_TYPE TEXT, $C_VIEW_ACTIVTY TEXT, $C_CLICK_X INT, $C_CLICK_Y INT, $C_TIMESTAMP TEXT)"
-        val createViewDataTable = "CREATE TABLE $T_VIEW_DATA ($C_VIEW_DATA_ID INTEGER PRIMARY KEY AUTOINCREMENT, $C_VIEW_ID TEXT, $C_VIEW_ACTIVTY TEXT, $C_TOPLEFT_X INT, $C_TOPLEFT_Y INT, $C_BOTTOMRIGHT_X INT, $C_BOTTOMRIGHT_Y INT, $C_BASE_COLOR INT, $C_BASE_SIZE_WIDTH INT, $C_BASE_SIZE_HEIGHT INT)"
-        val createDeviceDataTable = "CREATE TABLE $T_DEVICE_DATA ($C_DEVICE_DATA_ID INTEGER PRIMARY KEY AUTOINCREMENT, $C_SCREEN_WIDTH INT, $C_SCREEN_HEIGHT INT)"
-        val createAnalysisDataTable = "CREATE TABLE $T_ANALYSIS_DATA ($C_ANALYSIS_DATA_ID INTEGER PRIMARY KEY AUTOINCREMENT, $C_VIEW_ID TEXT, $C_VIEW_ACTIVTY TEXT, $C_ERROR_RATIO TEXT, $C_AVERAGE_DIST_FROM_BORDER TEXT, $C_DIST_GRAVITY_CENTER TEXT, $C_GRAVITY_CENTER_X INT, $C_GRAVITY_CENTER_Y INT)"
-        val createTacticsDataTable = "CREATE TABLE $T_TACTICS_DATA ($C_TACTICS_DATA_ID INTEGER PRIMARY KEY AUTOINCREMENT, $C_VIEW_ID TEXT, $C_VIEW_ACTIVTY TEXT, $C_VIEW_COLOR INT, $C_PADDING_START INT, $C_PADDING_END INT, $C_PADDING_TOP INT, $C_PADDING_BOTTOM INT, $C_OLD_PADDING_START INT, $C_OLD_PADDING_END INT, $C_OLD_PADDING_TOP INT, $C_OLD_PADDING_BOTTOM INT, $C_VIEW_WIDTH INT, $C_VIEW_HEIGHT INT)"
-        val createAnalysisTimestampTable = "CREATE TABLE $T_ANALYSIS_TIMESTAMPS ($C_ANALYSIS_TIMESTAMP_ID INTEGER PRIMARY KEY AUTOINCREMENT, $C_ACTIVITY TEXT, $C_CORRECTIONS_TIMESTAMP TEXT)"
-
-        db.execSQL(createClickEventTable)
-        db.execSQL(createViewDataTable)
-        db.execSQL(createDeviceDataTable)
-        db.execSQL(createAnalysisDataTable)
-        db.execSQL(createTacticsDataTable)
-        db.execSQL(createAnalysisTimestampTable)
+    init {
+        val cw = ContextWrapper(context)
+        DB_PATH = cw.filesDir.absolutePath + "/databases/"
+        Log.e(TAG, "TestDatabaseHelper: DB_PATH $DB_PATH")
+        outFileName = DB_PATH + DB_NAME
+        val file = File(DB_PATH)
+        Log.e(TAG, "TestDatabaseHelper: " + file.exists())
+        if (!file.exists()) {
+            file.mkdir()
+        }
     }
 
-    // It is called if the db version number changes. It prevents previous users apps from breaking when you change the db design
-    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
 
-        db.execSQL("DROP TABLE IF EXISTS $T_CLICK_EVENTS")
-        db.execSQL("DROP TABLE IF EXISTS $T_VIEW_DATA")
-        db.execSQL("DROP TABLE IF EXISTS $T_DEVICE_DATA")
-        db.execSQL("DROP TABLE IF EXISTS $T_ANALYSIS_DATA")
-        db.execSQL("DROP TABLE IF EXISTS $T_TACTICS_DATA")
-        db.execSQL("DROP TABLE IF EXISTS $T_ANALYSIS_TIMESTAMPS")
-
-        onCreate(db)
+    /**
+     * Creates a empty database on the system and rewrites it with your own database.
+     */
+    @Throws(IOException::class)
+    fun createDataBase() {
+        val dbExist = checkDataBase()
+        if (dbExist) {
+            //do nothing - database already exist
+        } else {
+            //By calling this method and empty database will be created into the default system path
+            //of your application so we are gonna be able to overwrite that database with our database.
+            this.readableDatabase
+            try {
+                copyDataBase()
+            } catch (e: IOException) {
+                throw Error("Error copying database")
+            }
+        }
     }
 
+    /**
+     * Check if the database already exist to avoid re-copying the file each time you open the application.
+     *
+     * @return true if it exists, false if it doesn't
+     */
+    private fun checkDataBase(): Boolean {
+        var checkDB: SQLiteDatabase? = null
+        try {
+            checkDB = SQLiteDatabase.openDatabase(outFileName, null, SQLiteDatabase.OPEN_READWRITE)
+        } catch (e: SQLiteException) {
+            try {
+                copyDataBase()
+            } catch (e1: IOException) {
+                e1.printStackTrace()
+            }
+        }
+        checkDB?.close()
+        return checkDB != null
+    }
+
+    /**
+     * Copies your database from your local assets-folder to the just created empty database in the
+     * system folder, from where it can be accessed and handled.
+     * This is done by transfering bytestream.
+     */
+    @Throws(IOException::class)
+    private fun copyDataBase() {
+        Log.i(
+            "Database",
+            "New database is being copied to device!"
+        )
+        val buffer = ByteArray(1024)
+        var myOutput: OutputStream? = null
+        var length: Int
+        // Open your local db as the input stream
+        var myInput: InputStream? = null
+        try {
+            myInput = myContext.getAssets().open(DB_NAME)
+            // transfer bytes from the inputfile to the
+            // outputfile
+            myOutput = FileOutputStream(DB_PATH + DB_NAME)
+            while (myInput.read(buffer).also { length = it } > 0) {
+                myOutput.write(buffer, 0, length)
+            }
+            myOutput.close()
+            myOutput.flush()
+            myInput.close()
+            Log.i(
+                "Database",
+                "New database has been copied to device!"
+            )
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+    }
+
+    @Throws(SQLException::class)
+    fun openDataBase() : SQLiteDatabase{
+        //Open the database
+        val myPath = DB_PATH + DB_NAME
+        Log.e(TAG, "openDataBase: Open " + db!!.isOpen)
+
+        return SQLiteDatabase.openDatabase(myPath, null, SQLiteDatabase.OPEN_READWRITE)
+    }
+
+    @Synchronized
+    override fun close() {
+        if (db != null) db!!.close()
+        super.close()
+    }
+
+    override fun onCreate(arg0: SQLiteDatabase) {}
+    override fun onUpgrade(arg0: SQLiteDatabase, arg1: Int, arg2: Int) {}
+
+    // =============================================================================================
 
     // Add click to db
-    fun addClickEvent(click_data : SkClicksData) : Boolean {
+    fun addClickEvent(db : SQLiteDatabase, click_data : SkClicksData) : Boolean {
 
-        val db = this.writableDatabase
         val cv = ContentValues()
 
         cv.put(C_VIEW_ID, click_data.viewID)
@@ -112,7 +202,6 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
         cv.put(C_TIMESTAMP, click_data.timestamp.toString())
 
         val result = db.insert(T_CLICK_EVENTS, null, cv)
-        db.close()
 
         return if(result == -1L){
             Log.d("info", "DATABASE SK : ERROR WHILE SAVING THE CLICK DATA")
@@ -124,12 +213,11 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
     }
 
     // Add view data to db
-    fun addViewData(view_data: SkCoordsData) : Boolean{
+    fun addViewData(db : SQLiteDatabase, view_data: SkCoordsData) : Boolean{
 
         // Check if view data is already saved before saving
-        if(!isDataAlreadyInDB(T_VIEW_DATA, C_VIEW_ID, view_data.viewID)){
+        if(!isDataAlreadyInDB(db, T_VIEW_DATA, C_VIEW_ID, view_data.viewID)){
 
-            val db = this.writableDatabase
             val cv = ContentValues()
 
             cv.put(C_VIEW_ID, view_data.viewID)
@@ -143,7 +231,6 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
             cv.put(C_BASE_SIZE_HEIGHT, view_data.baseSizeHeight)
 
             val result = db.insert(T_VIEW_DATA, null, cv)
-            db.close()
 
             return if(result == -1L){
                 Log.d("info", "DATABASE SK : ERROR WHILE SAVING THE VIEW DATA")
@@ -161,16 +248,14 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
     }
 
     // Add hardware data to db
-    fun addDeviceData(screen_width:Int, screen_height:Int) : Boolean{
+    fun addDeviceData(db : SQLiteDatabase, screen_width:Int, screen_height:Int) : Boolean{
 
-        val db = this.writableDatabase
         val cv = ContentValues()
 
         cv.put(C_SCREEN_WIDTH, screen_width)
         cv.put(C_SCREEN_HEIGHT, screen_height)
 
         val result = db.insert(T_DEVICE_DATA, null, cv)
-        db.close()
 
         return if(result == -1L){
             Log.d("info", "DATABASE SK : ERROR WHILE SAVING THE DEVICE DATA")
@@ -184,38 +269,34 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
     }
 
     // Check if data already in DB or not
-    private fun isDataAlreadyInDB(table_name : String, field_name: String, field_value: String?) : Boolean{
+    private fun isDataAlreadyInDB(db : SQLiteDatabase, table_name : String, field_name: String, field_value: String?) : Boolean{
 
-        val db = this.readableDatabase
         val query = "SELECT * FROM $table_name WHERE $field_name = \"$field_value\" "
         val cursor = db.rawQuery(query, null)
         if (cursor.count <= 0) {
             cursor.close()
-            db.close()
             return false
         }
         cursor.close()
-        db.close()
         return true
     }
 
     // Add analysis data
-    fun addAnalysisData(analysisData : SkAnalysisData){
+    fun addAnalysisData(db : SQLiteDatabase, analysisData : SkAnalysisData){
         // Check if analysis data for this view already exist, if yes update data else add new row of data
 
-        val result = analysisDataExists(analysisData)
+        val result = analysisDataExists(db, analysisData)
         if(result != -1){
             // Update analysis data in row of id = result
-            updateAnalysisData(result, analysisData)
+            updateAnalysisData(db, result, analysisData)
         } else {
             // Create row to add analysis data
-            addNewAnalysisData(analysisData)
+            addNewAnalysisData(db, analysisData)
         }
     }
 
-    private fun updateAnalysisData(id: Int, analysisData : SkAnalysisData) : Boolean{
+    private fun updateAnalysisData(db : SQLiteDatabase, id: Int, analysisData : SkAnalysisData) : Boolean{
 
-        val db = this.writableDatabase
         val cv = ContentValues()
         cv.put(C_ERROR_RATIO, roundTo2Decimal(analysisData.errorRatio))
         cv.put(C_AVERAGE_DIST_FROM_BORDER, roundTo2Decimal(analysisData.averageDistFromBorder))
@@ -228,18 +309,16 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
 
         return try{
             db.update(T_ANALYSIS_DATA, cv, where, whereArgs)
-            db.close()
             Log.d("info", "DATABASE SK : SUCCESSFULLY UPDATED THE ANALYSIS DATA OF ${analysisData.viewID}")
             true
         } catch (e: Exception){
-            db.close()
             Log.d("info", "DATABASE SK : ERROR WHILE UPDATING THE ANALYSIS DATA OF ${analysisData.viewID}")
             false
         }
     }
 
-    private fun addNewAnalysisData(analysisData : SkAnalysisData) : Boolean{
-        val db = this.writableDatabase
+    private fun addNewAnalysisData(db : SQLiteDatabase, analysisData : SkAnalysisData) : Boolean{
+
         val cv = ContentValues()
 
         cv.put(C_VIEW_ID, analysisData.viewID)
@@ -251,7 +330,6 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
         cv.put(C_GRAVITY_CENTER_Y, analysisData.gravityCenterY)
 
         val result = db.insert(T_ANALYSIS_DATA, null, cv)
-        db.close()
 
         return if(result == -1L){
             Log.d("info", "DATABASE SK : ERROR WHILE SAVING THE ANALYSIS DATA OF ${analysisData.viewID}")
@@ -264,22 +342,19 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
 
     // Check if analysis data for this view already exist
     // Return -1 if it doesn't else return row id of data
-    private fun analysisDataExists(analysisData : SkAnalysisData) : Int{
+    private fun analysisDataExists(db : SQLiteDatabase, analysisData : SkAnalysisData) : Int{
 
         val viewID = analysisData.viewID
         val activity = analysisData.viewLocal
 
-        val db = this.readableDatabase
         val query = "SELECT $C_ANALYSIS_DATA_ID FROM $T_ANALYSIS_DATA WHERE $C_VIEW_ID = \"$viewID\" AND $C_VIEW_ACTIVTY = \"$activity\" "
         val cursor = db.rawQuery(query, null)
         return if(cursor.moveToFirst()){
             val id = cursor.getInt(0)
             cursor.close()
-            db.close()
             id
         } else {
             cursor.close()
-            db.close()
             -1
         }
     }
@@ -293,8 +368,7 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
         return true
     }
 
-    fun getClicksDataOfActivity(activity : String, lastCorrectionTimestamp : String?) : MutableList<SkClicksData> {
-        val db = this.readableDatabase
+    fun getClicksDataOfActivity(db : SQLiteDatabase, activity : String, lastCorrectionTimestamp : String?) : MutableList<SkClicksData> {
 
         val query = if(lastCorrectionTimestamp == null){
             "SELECT * FROM $T_CLICK_EVENTS WHERE $C_VIEW_ACTIVTY = '$activity'"
@@ -322,16 +396,14 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
                 }
                 cursor.close() // close your cursor when you don't need it anymore
             }
-            db.close()
             return clicksData
         } catch (e: Exception){
-            db.close()
             return mutableListOf()
         }
     }
 
-    fun getViewsDataOfActivity(activity: String) : MutableList<SkCoordsData>{
-        val db = this.readableDatabase
+    fun getViewsDataOfActivity(db : SQLiteDatabase, activity: String) : MutableList<SkCoordsData>{
+
         val query = "SELECT * FROM $T_VIEW_DATA WHERE $C_VIEW_ACTIVTY = \'$activity\'"
 
         val viewsData = mutableListOf<SkCoordsData>()
@@ -357,16 +429,14 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
                 }
                 cursor.close() // close your cursor when you don't need it anymore
             }
-            db.close()
             return viewsData
         } catch (e: Exception){
-            db.close()
             return mutableListOf()
         }
     }
 
-    fun getViewData(viewID:String, activity: String):SkCoordsData?{
-        val db = this.readableDatabase
+    fun getViewData(db : SQLiteDatabase, viewID:String, activity: String): SkCoordsData?{
+
         val query = "SELECT * FROM $T_VIEW_DATA WHERE $C_VIEW_ID = \'$viewID\' AND $C_VIEW_ACTIVTY = \'$activity\'"
 
         return try{
@@ -385,21 +455,18 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
                 val result = SkCoordsData(id, viewActivity, listOf(tl_x, tl_y), listOf(dr_x, dr_y), color, width, height)
 
                 cursor.close()
-                db.close()
                 result
             } else {
                 cursor.close()
-                db.close()
                 null
             }
         } catch (e: Exception){
-            db.close()
             null
         }
     }
 
-    fun getDeviceData() : List<Any>{
-        val db = this.readableDatabase
+    fun getDeviceData(db : SQLiteDatabase) : List<Any>{
+
         val query = "SELECT * FROM $T_DEVICE_DATA"
 
         return try{
@@ -408,21 +475,18 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
                 val width = cursor.getInt(1)
                 val height = cursor.getInt(2)
                 cursor.close()
-                db.close()
                 listOf(width, height)
             } else {
                 cursor.close()
-                db.close()
                 listOf()
             }
         } catch (e: Exception){
-            db.close()
             listOf()
         }
     }
 
-    fun getAnalysisData(viewID: String, activity: String):SkAnalysisData?{
-        val db = this.readableDatabase
+    fun getAnalysisData(db : SQLiteDatabase, viewID: String, activity: String): SkAnalysisData?{
+
         val query = "SELECT * FROM $T_ANALYSIS_DATA WHERE $C_VIEW_ACTIVTY = \'$activity\' AND $C_VIEW_ID = \'$viewID\'"
 
         return try{
@@ -437,56 +501,50 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
                 val gravityY = cursor.getInt(7)
 
                 cursor.close()
-                db.close()
                 SkAnalysisData(viewid, viewActivity, errorRatio.toFloat(), averageDistFromBorder.toFloat(), distGravityCenter.toFloat(), gravityX, gravityY)
             } else {
                 cursor.close()
-                db.close()
                 null
             }
         } catch (e: Exception){
-            db.close()
             null
         }
 
     }
 
-    fun updateLastCorrectionTimestamp(newTimestamp : String, activity: String) : Boolean{
+    fun updateLastCorrectionTimestamp(db : SQLiteDatabase, newTimestamp : String, activity: String) : Boolean{
 
         // Check if correction timestamp data for this activity already exist, if yes update data else add new row of data
 
-        val result = isDataAlreadyInDB(T_ANALYSIS_TIMESTAMPS, C_ACTIVITY, activity)
+        val result = isDataAlreadyInDB(db, T_ANALYSIS_TIMESTAMPS, C_ACTIVITY, activity)
         if(result){
 
             // Update correction timestamp data in activity
-            val db = this.writableDatabase
+
             val cv = ContentValues()
             cv.put(C_CORRECTIONS_TIMESTAMP, newTimestamp)
 
-            val where = "$C_ACTIVITY=?"
+            val where = "${C_ACTIVITY}=?"
             val whereArgs = arrayOf(activity)
 
             return try{
                 db.update(T_ANALYSIS_TIMESTAMPS, cv, where, whereArgs)
-                db.close()
                 Log.d("info", "DATABASE SK : SUCCESSFULLY UPDATED THE LAST CORRECTION TIMESTAMP")
                 true
             } catch (e: Exception){
-                db.close()
                 Log.d("info", "DATABASE SK : ERROR WHILE UPDATING THE LAST CORRECTION TIMESTAMP")
                 false
             }
 
         } else {
             // Create row to add correction timestamp data
-            val db = this.writableDatabase
+
             val cv = ContentValues()
 
             cv.put(C_ACTIVITY, activity)
             cv.put(C_CORRECTIONS_TIMESTAMP, newTimestamp)
 
             val resultAdd = db.insert(T_ANALYSIS_TIMESTAMPS, null, cv)
-            db.close()
 
             return if(resultAdd == -1L){
                 Log.d("info", "DATABASE SK : ERROR WHILE SAVING THE CORRECTION TIMESTAMP OF $activity")
@@ -499,46 +557,40 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
 
     }
 
-    fun getLastCorrectionTimestampOfActivity(activity: String) : String?{
-        val db = this.readableDatabase
-        val query = "SELECT * FROM $T_ANALYSIS_TIMESTAMPS WHERE $C_ACTIVITY = \'$activity\'"
+    fun getLastCorrectionTimestampOfActivity(db : SQLiteDatabase, activity: String) : String?{
+
+        val query = "SELECT * FROM ${T_ANALYSIS_TIMESTAMPS} WHERE ${C_ACTIVITY} = \'$activity\'"
 
         return try{
             val cursor = db.rawQuery(query, null)
             if(cursor.moveToFirst()){
                 val time = cursor.getString(2)
                 cursor.close()
-                db.close()
                 time
             } else {
                 cursor.close()
-                db.close()
                 null
             }
         } catch (e: Exception){
-            db.close()
             null
         }
     }
 
-    fun getViewBaseColor(viewID : String, activity: String) : Int?{
-        val db = this.readableDatabase
-        val query = "SELECT * FROM $T_VIEW_DATA WHERE $C_VIEW_ID = \'$viewID\' AND $C_VIEW_ACTIVTY = '$activity'"
+    fun getViewBaseColor(db : SQLiteDatabase, viewID : String, activity: String) : Int?{
+
+        val query = "SELECT * FROM ${T_VIEW_DATA} WHERE ${C_VIEW_ID} = \'$viewID\' AND ${C_VIEW_ACTIVTY} = '$activity'"
 
         return try{
             val cursor = db.rawQuery(query, null)
             if(cursor.moveToFirst()){
                 val color = cursor.getInt(7)
                 cursor.close()
-                db.close()
                 color
             } else {
                 cursor.close()
-                db.close()
                 null
             }
         } catch (e: Exception){
-            db.close()
             null
         }
     }
@@ -547,19 +599,19 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
         return "%.2f".format(d)
     }
 
-    fun saveTacticsData(data: SkTacticsData){
-        val result = tacticsDataExists(data)
+    fun saveTacticsData(db : SQLiteDatabase, data: SkTacticsData){
+        val result = tacticsDataExists(db, data)
         if(result != -1){
             // Update analysis data in row of id = result
-            updateTacticsData(result, data)
+            updateTacticsData(db, result, data)
         } else {
             // Create row to add analysis data
-            addTacticsData(data)
+            addTacticsData(db, data)
         }
     }
 
-    private fun addTacticsData(data : SkTacticsData) : Boolean{
-        val db = this.writableDatabase
+    private fun addTacticsData(db : SQLiteDatabase, data : SkTacticsData) : Boolean{
+
         val cv = ContentValues()
 
         cv.put(C_VIEW_ID, data.viewID)
@@ -577,7 +629,6 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
         cv.put(C_VIEW_HEIGHT, data.viewHeight)
 
         val result = db.insert(T_TACTICS_DATA, null, cv)
-        db.close()
 
         return if(result == -1L){
             Log.d("info", "DATABASE SK : ERROR WHILE SAVING THE TACTICS DATA OF ${data.viewID}")
@@ -588,8 +639,8 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
         }
     }
 
-    private fun updateTacticsData(id:Int, data : SkTacticsData) : Boolean{
-        val db = this.writableDatabase
+    private fun updateTacticsData(db : SQLiteDatabase, id:Int, data : SkTacticsData) : Boolean{
+
         val cv = ContentValues()
         cv.put(C_VIEW_COLOR, data.color)
         cv.put(C_PADDING_START, data.paddingStart)
@@ -608,39 +659,34 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
 
         return try{
             db.update(T_TACTICS_DATA, cv, where, whereArgs)
-            db.close()
             Log.d("info", "DATABASE SK : SUCCESSFULLY UPDATED THE TACTICS DATA OF ${data.viewID}")
             true
         } catch (e: Exception){
-            db.close()
             Log.d("info", "DATABASE SK : ERROR WHILE UPDATING THE TACTICS DATA OF ${data.viewID}")
             false
         }
     }
 
-    private fun tacticsDataExists(data : SkTacticsData) : Int{
+    private fun tacticsDataExists(db : SQLiteDatabase, data : SkTacticsData) : Int{
 
         val viewID = data.viewID
         val activity = data.viewLocal
 
-        val db = this.readableDatabase
-        val query = "SELECT * FROM $T_TACTICS_DATA WHERE $C_VIEW_ID = \"$viewID\" AND $C_VIEW_ACTIVTY = \"$activity\" "
+        val query = "SELECT * FROM ${T_TACTICS_DATA} WHERE ${C_VIEW_ID} = \"$viewID\" AND ${C_VIEW_ACTIVTY} = \"$activity\" "
         val cursor = db.rawQuery(query, null)
         return if(cursor.moveToFirst()){
             val id = cursor.getInt(0)
             cursor.close()
-            db.close()
             id
         } else {
             cursor.close()
-            db.close()
             -1
         }
     }
 
-    fun getTacticsDataOfActivity(activity: String): MutableList<SkTacticsData>{
-        val db = this.readableDatabase
-        val query = "SELECT * FROM $T_TACTICS_DATA WHERE $C_VIEW_ACTIVTY = \'$activity\'"
+    fun getTacticsDataOfActivity(db : SQLiteDatabase, activity: String): MutableList<SkTacticsData>{
+
+        val query = "SELECT * FROM ${T_TACTICS_DATA} WHERE ${C_VIEW_ACTIVTY} = \'$activity\'"
 
         val tacticsData = mutableListOf<SkTacticsData>()
 
@@ -669,17 +715,15 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
                 }
                 cursor.close() // close your cursor when you don't need it anymore
             }
-            db.close()
             return tacticsData
         } catch (e: Exception){
-            db.close()
             return mutableListOf()
         }
     }
 
-    fun getTacticsDataOfView(viewID: String, activity:String): SkTacticsData?{
-        val db = this.readableDatabase
-        val query = "SELECT * FROM $T_TACTICS_DATA WHERE $C_VIEW_ACTIVTY = \'$activity\' AND $C_VIEW_ID = \'$viewID\'"
+    fun getTacticsDataOfView(db : SQLiteDatabase, viewID: String, activity:String): SkTacticsData?{
+
+        val query = "SELECT * FROM ${T_TACTICS_DATA} WHERE ${C_VIEW_ACTIVTY} = \'$activity\' AND ${C_VIEW_ID} = \'$viewID\'"
 
         val cursor = db.rawQuery(query, null)
         return if(cursor.moveToFirst()){
@@ -699,11 +743,9 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
 
             val data = SkTacticsData(id, viewActivity, color, paddingStart, paddingEnd, paddingTop, paddingBottom, oldPaddingStart, oldPaddingEnd, oldPaddingTop,oldPaddingBottom, viewWidth, viewHeight)
             cursor.close()
-            db.close()
             data
         } else {
             cursor.close()
-            db.close()
             null
         }
     }
