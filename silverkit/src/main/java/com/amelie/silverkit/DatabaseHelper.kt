@@ -425,6 +425,8 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
         val db = this.readableDatabase
         val query = "SELECT * FROM $T_ANALYSIS_DATA WHERE $C_VIEW_ACTIVTY = \'$activity\' AND $C_VIEW_ID = \'$viewID\'"
 
+        Log.d("into", "getAnalysisData : GET ANALYSIS DATA OF $viewID")
+
         return try{
             val cursor = db.rawQuery(query, null)
             if(cursor.moveToFirst()){
@@ -438,14 +440,17 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
 
                 cursor.close()
                 db.close()
+                Log.d("into", "getAnalysisData : SUCCESS GETTING DATA ANALYSIS OF $viewID")
                 SkAnalysisData(viewid, viewActivity, errorRatio.toFloat(), averageDistFromBorder.toFloat(), distGravityCenter.toFloat(), gravityX, gravityY)
             } else {
                 cursor.close()
                 db.close()
+                Log.d("into", "getAnalysisData : ERROR GETTING DATA ANALYSIS OF $viewID")
                 null
             }
         } catch (e: Exception){
             db.close()
+            Log.d("into", "getAnalysisData : ERROR GETTING DATA ANALYSIS OF $viewID")
             null
         }
 

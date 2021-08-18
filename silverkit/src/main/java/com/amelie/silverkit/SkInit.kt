@@ -174,6 +174,8 @@ class SkInit {
     // -------------------- TACTICS
     private fun applyTactics(activity: Activity, oldAnalysisData : SkAnalysisData?, newAnalysisData : SkAnalysisData?){
 
+        Log.d("info", "applyTactics : APPLYING TACTICS ... ")
+
         // See if it's necessary to apply tactics for the view, if yes apply tactics
         if(newAnalysisData != null){
 
