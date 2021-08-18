@@ -1,12 +1,10 @@
 package com.amelie.silverkit
 
-import TestDatabaseHelper
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.res.Configuration
-import android.database.sqlite.SQLiteDatabase
 import android.graphics.Color
 import android.graphics.Point
 import android.graphics.drawable.ColorDrawable
@@ -406,7 +404,7 @@ class SkInit {
         val resourceID = activity.baseContext.resources.getIdentifier(viewID, "layout", activity.packageName)
         val view = activity.window?.decorView?.findViewById(resourceID) as View
 
-        val sizeJump = dpsToPixels(2, activity.baseContext)
+        val sizeJump = dpsToPixels(4, activity.baseContext)
 
         if(checkResizeTactic(view, activity, newAnalysisData, oldAnalysisData,sizeJump)){
 
@@ -645,28 +643,28 @@ class SkInit {
                     if(gravityCenterX < centerOfView[0]){
                         // left : move right
                         if(paddingStart < width){
-                            newPS += 4
+                            newPS += 6
                             Log.d("info", " applyGravityCenterTactic : MOVE RIGHT ")
                         }
                     }
                     if(gravityCenterX > centerOfView[0]){
                         // right : move left
                         if(paddingEnd < width){
-                            newPE += 4
+                            newPE += 6
                             Log.d("info", " applyGravityCenterTactic : MOVE LEFT ")
                         }
                     }
                     if(gravityCenterY < centerOfView[1]){
                         // top : move bottom
                         if(paddingTop < height){
-                            newPT += 4
+                            newPT += 6
                             Log.d("info", " applyGravityCenterTactic : MOVE BOTTOM ")
                         }
                     }
                     if(gravityCenterY > centerOfView[1]){
                         // bottom : move top
                         if(paddingBottom < height){
-                            newPB += 4
+                            newPB += 6
                             Log.d("info", " applyGravityCenterTactic : MOVE TOP ")
                         }
                     }
