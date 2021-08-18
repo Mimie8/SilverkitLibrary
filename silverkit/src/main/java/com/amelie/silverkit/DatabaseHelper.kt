@@ -441,6 +441,7 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
                 cursor.close()
                 db.close()
                 Log.d("into", "getAnalysisData : SUCCESS GETTING DATA ANALYSIS OF $viewID")
+                Log.d("info","SkAnalysisData(viewID=$viewID, viewActivity=$viewActivity, errorRatio=$errorRatio, averageDistFromBorder=$averageDistFromBorder, distGravityCenter=$distGravityCenter, gravityX=$gravityX, gravityY=$gravityY)")
                 SkAnalysisData(viewid, viewActivity, errorRatio.toFloat(), averageDistFromBorder.toFloat(), distGravityCenter.toFloat(), gravityX, gravityY)
             } else {
                 cursor.close()
