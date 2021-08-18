@@ -52,7 +52,7 @@ class SkInit {
         for (view in viewsData){
 
             val viewID = view.viewID
-            val resourceID = activity.baseContext.resources.getIdentifier(viewID, "layout", activity.packageName)
+            val resourceID = activity.baseContext.resources.getIdentifier(viewID, "id", activity.packageName)
             val viewElement = activity.window?.decorView?.findViewById(resourceID) as View
 
             val index = tacticsData.indexOfFirst{
@@ -188,7 +188,7 @@ class SkInit {
     private fun applyColorContrastTactic(activity: Activity, newAnalysisData: SkAnalysisData, oldAnalysisData: SkAnalysisData?){
 
         val viewID = newAnalysisData.viewID
-        val resourceID = activity.baseContext.resources.getIdentifier(viewID, "layout", activity.packageName)
+        val resourceID = activity.baseContext.resources.getIdentifier(viewID, "id", activity.packageName)
         val view = activity.window?.decorView?.findViewById(resourceID) as View
 
         // Get color of view
@@ -401,7 +401,7 @@ class SkInit {
     private fun applyResizeTactic(activity: Activity, newAnalysisData: SkAnalysisData, oldAnalysisData: SkAnalysisData?){
 
         val viewID = newAnalysisData.viewID
-        val resourceID = activity.baseContext.resources.getIdentifier(viewID, "layout", activity.packageName)
+        val resourceID = activity.baseContext.resources.getIdentifier(viewID, "id", activity.packageName)
         val view = activity.window?.decorView?.findViewById(resourceID) as View
 
         val sizeJump = dpsToPixels(4, activity.baseContext)
@@ -590,7 +590,7 @@ class SkInit {
     private fun applyGravityCenterTactic(activity: Activity, newAnalysisData: SkAnalysisData, oldAnalysisData: SkAnalysisData?){
 
         val viewID = newAnalysisData.viewID
-        val resourceID = activity.baseContext.resources.getIdentifier(viewID, "layout", activity.packageName)
+        val resourceID = activity.baseContext.resources.getIdentifier(viewID, "id", activity.packageName)
         val view = activity.window?.decorView?.findViewById(resourceID) as View
 
         val db =  DatabaseHelper(activity.baseContext)
