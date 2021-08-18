@@ -430,7 +430,7 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
         return try{
             val cursor = db.rawQuery(query, null)
             if(cursor.moveToFirst()){
-                val viewid = cursor.getString(1)
+                val viewId = cursor.getString(1)
                 val viewActivity = cursor.getString(2)
                 val errorRatio = cursor.getString(3)
                 val averageDistFromBorder = cursor.getString(4)
@@ -442,7 +442,11 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
                 db.close()
                 Log.d("into", "getAnalysisData : SUCCESS GETTING DATA ANALYSIS OF $viewID")
                 Log.d("info","SkAnalysisData(viewID=$viewID, viewActivity=$viewActivity, errorRatio=$errorRatio, averageDistFromBorder=$averageDistFromBorder, distGravityCenter=$distGravityCenter, gravityX=$gravityX, gravityY=$gravityY)")
-                SkAnalysisData(viewid, viewActivity, errorRatio.toFloat(), averageDistFromBorder.toFloat(), distGravityCenter.toFloat(), gravityX, gravityY)
+                val errorF = errorRatio.toFloat()
+                val averageDistF = averageDistFromBorder.toFloat()
+                val distGravF = distGravityCenter.toFloat()
+                Log.d("info", "errorF=$errorF, averageDistF=$averageDistF, distGravF=$distGravF")
+                SkAnalysisData(viewId, viewActivity, errorF, averageDistF, distGravF, gravityX, gravityY)
             } else {
                 cursor.close()
                 db.close()
