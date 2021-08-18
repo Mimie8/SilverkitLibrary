@@ -1068,11 +1068,10 @@ class SkInit {
         if (view.id == View.NO_ID) {
             view.id = View.generateViewId()
             Log.d("info", "RETURNED VIEW ID : ${getViewType(view).toString() + "-" + view.id}")
-            return getViewType(view).toString() + "-" + view.id
+            return view.id.toString()
         }
-        Log.d("info", "RETURNED VIEW ID : ${view.id}")
-        return view.id.toString()
-
+        Log.d("info", "RETURNED VIEW ID : ${view.context.resources.getResourceEntryName(view.id)}")
+        return view.context.resources.getResourceEntryName(view.id).toString()
     }
 
     private fun getViewType(view: View) : SkTools.ViewType {
