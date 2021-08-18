@@ -3,12 +3,12 @@ package com.amelie.silverkit
 import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
-import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
 import com.amelie.silverkit.datamanager.*
+import com.readystatesoftware.sqliteasset.SQLiteAssetHelper
 
 
-class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase", null, 1) {
+class DatabaseHelper(context: Context?) : SQLiteAssetHelper(context, "SkDatabase", null, 1) {
 
     // static variables
     companion object {
@@ -66,6 +66,7 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
         const val C_CORRECTIONS_TIMESTAMP = "CORRECTIONS_TIMESTAMP"
     }
 
+    /*
     // This is called the first time a database is accessed. There should be code in there to create a new db
     override fun onCreate(db: SQLiteDatabase) {
 
@@ -83,6 +84,7 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
         db.execSQL(createTacticsDataTable)
         db.execSQL(createAnalysisTimestampTable)
     }
+    */
 
     // It is called if the db version number changes. It prevents previous users apps from breaking when you change the db design
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
