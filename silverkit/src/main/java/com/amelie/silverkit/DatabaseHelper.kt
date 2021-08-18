@@ -432,21 +432,17 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
             if(cursor.moveToFirst()){
                 val viewId = cursor.getString(1)
                 val viewActivity = cursor.getString(2)
-                val errorRatio = cursor.getString(3)
-                val averageDistFromBorder = cursor.getString(4)
-                val distGravityCenter = cursor.getString(5)
+                val errorRatio = cursor.getString(3).replace(',', '.').toFloat()
+                val averageDistFromBorder = cursor.getString(4).replace(',', '.').toFloat()
+                val distGravityCenter = cursor.getString(5).replace(',', '.').toFloat()
                 val gravityX = cursor.getInt(6)
                 val gravityY = cursor.getInt(7)
 
                 cursor.close()
                 db.close()
                 Log.d("into", "getAnalysisData : SUCCESS GETTING DATA ANALYSIS OF $viewID")
-                Log.d("info","SkAnalysisData(viewID=$viewID, viewActivity=$viewActivity, errorRatio=$errorRatio, averageDistFromBorder=$averageDistFromBorder, distGravityCenter=$distGravityCenter, gravityX=$gravityX, gravityY=$gravityY)")
-                val errorF = errorRatio.replace(',', '.').toFloat()
-                val averageDistF = averageDistFromBorder.replace(',', '.').toFloat()
-                val distGravF = distGravityCenter.replace(',', '.').toFloat()
-                Log.d("info", "errorF=$errorF, averageDistF=$averageDistF, distGravF=$distGravF")
-                SkAnalysisData(viewId, viewActivity, errorF, averageDistF, distGravF, gravityX, gravityY)
+
+                SkAnalysisData(viewId, viewActivity, errorRatio, averageDistFromBorder, distGravityCenter, gravityX, gravityY)
             } else {
                 cursor.close()
                 db.close()

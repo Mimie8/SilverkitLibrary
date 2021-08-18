@@ -643,28 +643,28 @@ class SkInit {
                     if(gravityCenterX < centerOfView[0]){
                         // left : move right
                         if(paddingStart < width){
-                            newPS += 6
+                            newPS += 4
                             Log.d("info", " applyGravityCenterTactic : MOVE RIGHT ")
                         }
                     }
                     if(gravityCenterX > centerOfView[0]){
                         // right : move left
                         if(paddingEnd < width){
-                            newPE += 6
+                            newPE += 4
                             Log.d("info", " applyGravityCenterTactic : MOVE LEFT ")
                         }
                     }
                     if(gravityCenterY < centerOfView[1]){
                         // top : move bottom
                         if(paddingTop < height){
-                            newPT += 6
+                            newPT += 4
                             Log.d("info", " applyGravityCenterTactic : MOVE BOTTOM ")
                         }
                     }
                     if(gravityCenterY > centerOfView[1]){
                         // bottom : move top
                         if(paddingBottom < height){
-                            newPB += 6
+                            newPB += 4
                             Log.d("info", " applyGravityCenterTactic : MOVE TOP ")
                         }
                     }
