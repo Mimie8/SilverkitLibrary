@@ -8,7 +8,7 @@ import com.amelie.silverkit.datamanager.*
 import com.readystatesoftware.sqliteasset.SQLiteAssetHelper
 
 
-class DatabaseHelper(context: Context?) : SQLiteAssetHelper(context, "SkDatabase", null, 1) {
+class DatabaseHelper(context: Context?) : SQLiteAssetHelper(context, "SkDatabase.db", null, 1) {
 
     // static variables
     companion object {
