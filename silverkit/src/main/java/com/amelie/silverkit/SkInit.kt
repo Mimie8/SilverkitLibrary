@@ -515,7 +515,7 @@ class SkInit {
 
                             if(oldRatio >= newRatio && oldDist >= newDist){
                                 // Tactic works
-                                Log.d("info", " checkResizeTactic : CONTINUE TO APPLY TACTIC ${oldRatio >= newRatio && oldDist >= newDist}")
+                                Log.d("info", " checkResizeTactic : CONTINUE TO APPLY TACTIC ${newAnalysisData.errorRatio > thresholdRatio && newAnalysisData.averageDistFromBorder > thresholdDist}")
                                 newAnalysisData.errorRatio > thresholdRatio && newAnalysisData.averageDistFromBorder > thresholdDist
                             } else {
                                 // Tactics doesn't work
@@ -541,6 +541,7 @@ class SkInit {
                         } else {
                             // If there isn't any old data than it's the first time we need to apply tactic if error ratio > 0.1
                             Log.d("info", " checkResizeTactic : APPLY TACTIC : ${newAnalysisData.errorRatio > thresholdRatio && newAnalysisData.averageDistFromBorder > thresholdDist} ")
+                            return newAnalysisData.errorRatio > thresholdRatio && newAnalysisData.averageDistFromBorder > thresholdDist
                         }
 
                     } else {
