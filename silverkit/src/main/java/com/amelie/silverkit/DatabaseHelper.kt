@@ -442,9 +442,9 @@ class DatabaseHelper(context: Context?) : SQLiteOpenHelper(context, "SkDatabase"
                 db.close()
                 Log.d("into", "getAnalysisData : SUCCESS GETTING DATA ANALYSIS OF $viewID")
                 Log.d("info","SkAnalysisData(viewID=$viewID, viewActivity=$viewActivity, errorRatio=$errorRatio, averageDistFromBorder=$averageDistFromBorder, distGravityCenter=$distGravityCenter, gravityX=$gravityX, gravityY=$gravityY)")
-                val errorF = errorRatio.toFloat()
-                val averageDistF = averageDistFromBorder.toFloat()
-                val distGravF = distGravityCenter.toFloat()
+                val errorF = errorRatio.replace("'", "").replace("\"", "").toFloat()
+                val averageDistF = averageDistFromBorder.replace("'", "").replace("\"", "").toFloat()
+                val distGravF = distGravityCenter.replace("'", "").replace("\"", "").toFloat()
                 Log.d("info", "errorF=$errorF, averageDistF=$averageDistF, distGravF=$distGravF")
                 SkAnalysisData(viewId, viewActivity, errorF, averageDistF, distGravF, gravityX, gravityY)
             } else {
