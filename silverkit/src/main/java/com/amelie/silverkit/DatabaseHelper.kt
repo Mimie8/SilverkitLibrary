@@ -66,7 +66,7 @@ class DatabaseHelper(context: Context?) : SQLiteAssetHelper(context, "SkDatabase
         const val C_CORRECTIONS_TIMESTAMP = "CORRECTIONS_TIMESTAMP"
     }
 
-    
+
     /*
     // This is called the first time a database is accessed. There should be code in there to create a new db
     override fun onCreate(db: SQLiteDatabase) {
