@@ -178,14 +178,17 @@ class SkInit {
         // See if it's necessary to apply tactics for the view, if yes apply tactics
         if(newAnalysisData != null){
 
-            applyColorContrastTactic(activity, newAnalysisData, oldAnalysisData)
-            applyResizeTactic(activity, newAnalysisData, oldAnalysisData)
+            val firsttime = applyColorContrastTactic(activity, newAnalysisData, oldAnalysisData)
+            applyResizeTactic(firsttime, activity, newAnalysisData, oldAnalysisData)
             applyGravityCenterTactic(activity, newAnalysisData, oldAnalysisData)
 
         }
     }
 
-    private fun applyColorContrastTactic(activity: Activity, newAnalysisData: SkAnalysisData, oldAnalysisData: SkAnalysisData?){
+    // return if first time using tactic
+    private fun applyColorContrastTactic(activity: Activity, newAnalysisData: SkAnalysisData, oldAnalysisData: SkAnalysisData?) : Boolean{
+
+        val db =  DatabaseHelper(activity.baseContext)
 
         val viewID = newAnalysisData.viewID
         val resourceID = activity.baseContext.resources.getIdentifier(viewID, "id", activity.packageName)
@@ -205,17 +208,20 @@ class SkInit {
                 val result = getBrightnessLevel(viewColor, viewBehindColor)
 
                 if(result != null){
-                    changeBrightnessLevel(view, viewColor, result, viewID, activity)
                     Log.d("info", " applyColorContrastTactic : SUCCESSFUL ")
+                    return changeBrightnessLevel(view, viewColor, result, viewID, activity)
                 }
             } else {
                 Log.d("info", " applyColorContrastTactic : ERROR (NO BACKGROUND COLOR TO CHANGE) ")
+                return false
             }
 
 
         } else {
             Log.d("info", " applyColorContrastTactic : NOT NECESSARY ")
+            return false
         }
+        return false
     }
 
     /**
@@ -349,10 +355,11 @@ class SkInit {
         return viewL > viewBehindL
     }
 
-    private fun changeBrightnessLevel(view:View, viewColor: Int, lighten:Boolean, viewID: String, activity: Activity){
+    private fun changeBrightnessLevel(view:View, viewColor: Int, lighten:Boolean, viewID: String, activity: Activity) : Boolean{
 
         val db =  DatabaseHelper(activity.baseContext)
 
+        var firsttime : Boolean = false
 
         val newColor : Int
         if(lighten){
@@ -390,15 +397,21 @@ class SkInit {
 
             width = tacticsData.viewWidth
             height = tacticsData.viewHeight
+
+        }
+
+        if(tacticsData?.color == null){
+            firsttime = true
         }
 
         val data = SkTacticsData(viewID, activity.localClassName, newColor, padS, padE, padT, padB, oPadS, oPadE, oPadT, oPadB, width, height)
         db.saveTacticsData(data)
         db.close()
 
+        return firsttime
     }
 
-    private fun applyResizeTactic(activity: Activity, newAnalysisData: SkAnalysisData, oldAnalysisData: SkAnalysisData?){
+    private fun applyResizeTactic(firsttime : Boolean, activity: Activity, newAnalysisData: SkAnalysisData, oldAnalysisData: SkAnalysisData?){
 
         val viewID = newAnalysisData.viewID
         val resourceID = activity.baseContext.resources.getIdentifier(viewID, "id", activity.packageName)
@@ -406,7 +419,7 @@ class SkInit {
 
         val sizeJump = dpsToPixels(4, activity.baseContext)
 
-        if(checkResizeTactic(view, activity, newAnalysisData, oldAnalysisData,sizeJump)){
+        if(checkResizeTactic(view, activity, newAnalysisData, oldAnalysisData,sizeJump) && !firsttime){
 
             val context = activity.baseContext
             val db =  DatabaseHelper(context)
@@ -477,7 +490,7 @@ class SkInit {
         val viewData = db.getViewData(newAnalysisData.viewID, activity.localClassName)
         val tacticsData = db.getTacticsDataOfView(newAnalysisData.viewID, activity.localClassName)
 
-        // if view n'a pas encore de tactique ou si la tactique de couleur a déjà été appliquée, alors on peut appliquer la resize tactic
+        // si la tactique de couleur a déjà été appliquée, alors on peut appliquer la resize tactic
         if(tacticsData == null || tacticsData.color != null){
             // we need to have access to basic size of view
             if(viewData != null){
